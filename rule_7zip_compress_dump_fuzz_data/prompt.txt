@@ -1,0 +1,104 @@
+Bạn là một chuyên gia về an ninh mạng (offensive security) và là một kỹ sư fuzzing.
+Nhiệm vụ của bạn là tạo ra một file văn phạm (grammar) JSON tập trung cao độ (highly-focused) để bypass một rule SIEM cụ thể.
+
+Đây là toàn bộ thông tin đầu vào của bạn:
+---
+
+### 1. Rule Name:
+rule_7zip_compress_dump
+
+### 2. Rule Sigma (Detection Logic):
+
+detection:
+    selection_img:
+        Image|endswith: ['z.exe', 'zr.exe', 'za.exe']
+    selection_extension:
+        CommandLine|contains: ['.dmp', '.dump', '.hdmp']
+    condition: all of selection_*
+
+
+### 3. Kỹ thuật thay thế (MITRE Techniques):
+
+- makecab.exe #{input_file} #{output_file}
+- [System.IO.Compression.ZipFile]::CreateFromDirectory(...)
+
+### 4. Thư viện Kỹ thuật (Primitives):
+
+#### Wrappers (Vỏ bọc)
+[
+  "cmd.exe /c {}",
+  "cmd.exe /r {}",
+  "echo {} | cmd",
+  "%COMSPEC% /c {}",
+  "cmd < {}"
+]
+
+#### Obfuscation (Ví dụ làm rối cho 'some_keyword'):
+[
+  "\"7z.exe\"",
+  "\"7Z.EXE\"",
+  "\"7z.exe\"",
+  "\"7^z.exe\"",
+  "\"7z\"\".exe\"",
+  "\"7z\"&\".exe\""
+]
+
+#### Noise (Gây nhiễu):
+[
+  "\"\"",
+  "&::",
+  "REM rác"
+]
+
+---
+
+### YÊU CẦU:
+
+Dựa trên các thông tin trên, hãy **TỰ ĐỘNG PHÂN TÍCH** các từ khóa (keywords) và logic, sau đó **TẠO RA** một file văn phạm JSON hoàn chỉnh.
+
+File văn phạm PHẢI tuân thủ các logic sau:
+
+1.  **Cấu trúc file:** JSON phải có 2 key chính: "rules" và "weights".
+2.  **Quy tắc Gốc (<start>):** Phải là một lựa chọn (trong 'weights') tên là "<wrapper_choice>", bao gồm TẤT CẢ các wrapper trong thư viện. Quy tắc "rules" `<start>` sẽ trỏ đến "<wrapper_choice>".
+3.  **Quy tắc Logic (<payload>):** Phải có một lựa chọn tên là "<payload_choice>" (trong 'weights') cho phép fuzzer chọn giữa:
+    * "<sigma_payload>" (để tấn công các từ khóa của Rule Sigma)
+    * "<mitre_payload>" (để tấn công logic bằng các kỹ thuật thay thế)
+4.  **Quy tắc Sigma (<sigma_payload>):**
+    * **Phân tích** 'Rule Sigma (Detection)' để tìm các TỪ KHÓA (ví dụ: '7z.exe', '.dmp') và LOGIC (ví dụ: 'all of', 'contains', 'endswith').
+    * **Tạo** các quy tắc lựa chọn (ví dụ: "<obf_7z_exe>", "<obf_dmp>") cho TỪNG TỪ KHÓA bạn tìm thấy, sử dụng logic từ 'Thư viện Obfuscation'.
+    * **Tạo** quy tắc sequence "<sigma_payload>" để kết hợp các quy tắc obfuscation này và 'Thư viện Noise' theo đúng 'LOGIC' (ví dụ: "all of" nghĩa là phải có cả hai).
+5.  **Quy tắc MITRE (<mitre_payload>):**
+    * **Phân tích** 'MITRE Techniques' để tìm các LỆNH thay thế (ví dụ: 'makecab.exe ...', 'powershell.exe...Compression.ZipFile').
+    * **Tạo** một lựa chọn (trong 'weights') tên là "<mitre_choice>" để fuzzer chọn một trong các lệnh này. Quy tắc "rules" `<mitre_payload>` sẽ trỏ đến "<mitre_choice>".
+6.  **Trọng số (Weights):** Tất cả các lựa chọn ban đầu phải có trọng số là `1.0`.
+7.  **Tính Sáng tạo (Quan trọng):** Dựa trên logic của 'Thư viện Obfuscation', hãy **tự mình đề xuất thêm 1-2 biến thể obfuscation mới** (ví dụ: dùng biến môi trường như `%COMSPEC%`) và thêm chúng vào các quy tắc lựa chọn (choice) có liên quan.
+
+---
+### OUTPUT (CHỈ JSON):
+
+Chỉ trả về nội dung file JSON. Không giải thích. Không viết gì khác..
+### ĐẦU RA JSON MẪU (ONE-SHOT EXAMPLE)
+
+Đây là file JSON đầu ra "chuẩn" cho ví dụ trên:
+
+```json
+{
+  "rules": {
+    "<start>": "<wrapper_choice>",
+    "<payload>": "<sigma_payload>",
+    "<sigma_payload>": "<obf_whoami>"
+  },
+  "weights": {
+    "<wrapper_choice>": {
+      "cmd.exe /c <payload>": 1.0,
+      "echo <payload> | cmd": 1.0
+    },
+    "<obf_whoami>": {
+      "\"whoami.exe\"": 1.0,
+      "\"WHOAMI.EXE\"": 1.0,
+      "\"who^ami.exe\"": 1.0,
+      "\"who\"\"ami.exe\"": 1.0
+    }
+  }
+}
+```

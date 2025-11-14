@@ -4,17 +4,12 @@
 
 import json
 import os
-import argparse  # <-- Thêm argparse để nhận file config
-import importlib.util  # <-- Thêm importlib để tải file config
-import sys
-
-# (Giả sử file obfuscation_lib.py tồn tại)
+import argparse
+import importlib.util
 from obfuscation_lib import get_string_obfuscations, get_wrappers, get_noise
 
 def load_rule_config(config_file_path):
-    """
-    Tải động một file cấu hình rule (ví dụ: rule_config_7zip.py)
-    """
+    """Tải động file cấu hình rule"""
     try:
         spec = importlib.util.spec_from_file_location("rule_config", config_file_path)
         if spec is None:
@@ -23,7 +18,6 @@ def load_rule_config(config_file_path):
         rule_config = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(rule_config)
         
-        # Kiểm tra xem file config có đủ các biến cần thiết không
         if not hasattr(rule_config, 'rule_name') or \
            not hasattr(rule_config, 'sigma_detection') or \
            not hasattr(rule_config, 'mitre_techniques'):
@@ -36,101 +30,129 @@ def load_rule_config(config_file_path):
         print(f"[LỖI] Không thể tải file cấu hình {config_file_path}: {e}")
         return None
 
+def generate_prompt(config):
+    """Tạo prompt cho Gemini dựa trên cấu hình rule"""
+    rule_name = config.rule_name
+    sigma_detection = config.sigma_detection
+    mitre_techniques = config.mitre_techniques
+    
+    wrappers = get_wrappers()
+    noise = get_noise()
+    
+    # Tạo ví dụ obfuscation
+    obfuscation_examples = get_string_obfuscations("7z.exe")
+    
+    prompt = f"""
+Bạn là một chuyên gia về an ninh mạng (offensive security) và là một kỹ sư fuzzing.
+Nhiệm vụ của bạn là tạo ra một file văn phạm (grammar) JSON tập trung cao độ (highly-focused) để bypass một rule SIEM cụ thể.
+
+Đây là toàn bộ thông tin đầu vào của bạn:
+---
+
+### 1. Rule Name:
+{rule_name}
+
+### 2. Rule Sigma (Detection Logic):
+{sigma_detection}
+
+### 3. Kỹ thuật thay thế (MITRE Techniques):
+{mitre_techniques}
+### 4. Thư viện Kỹ thuật (Primitives):
+
+#### Wrappers (Vỏ bọc)
+{json.dumps(wrappers, indent=2, ensure_ascii=False)}
+
+#### Obfuscation (Ví dụ làm rối cho 'some_keyword'):
+{json.dumps(obfuscation_examples, indent=2, ensure_ascii=False)}
+
+#### Noise (Gây nhiễu):
+{json.dumps(noise, indent=2, ensure_ascii=False)}
+
+---
+
+### YÊU CẦU:
+
+Dựa trên các thông tin trên, hãy **TỰ ĐỘNG PHÂN TÍCH** các từ khóa (keywords) và logic, sau đó **TẠO RA** một file văn phạm JSON hoàn chỉnh.
+
+File văn phạm PHẢI tuân thủ các logic sau:
+
+1.  **Cấu trúc file:** JSON phải có 2 key chính: "rules" và "weights".
+2.  **Quy tắc Gốc (<start>):** Phải là một lựa chọn (trong 'weights') tên là "<wrapper_choice>", bao gồm TẤT CẢ các wrapper trong thư viện. Quy tắc "rules" `<start>` sẽ trỏ đến "<wrapper_choice>".
+3.  **Quy tắc Logic (<payload>):** Phải có một lựa chọn tên là "<payload_choice>" (trong 'weights') cho phép fuzzer chọn giữa:
+    * "<sigma_payload>" (để tấn công các từ khóa của Rule Sigma)
+    * "<mitre_payload>" (để tấn công logic bằng các kỹ thuật thay thế)
+4.  **Quy tắc Sigma (<sigma_payload>):**
+    * **Phân tích** 'Rule Sigma (Detection)' để tìm các TỪ KHÓA (ví dụ: '7z.exe', '.dmp') và LOGIC (ví dụ: 'all of', 'contains', 'endswith').
+    * **Tạo** các quy tắc lựa chọn (ví dụ: "<obf_7z_exe>", "<obf_dmp>") cho TỪNG TỪ KHÓA bạn tìm thấy, sử dụng logic từ 'Thư viện Obfuscation'.
+    * **Tạo** quy tắc sequence "<sigma_payload>" để kết hợp các quy tắc obfuscation này và 'Thư viện Noise' theo đúng 'LOGIC' (ví dụ: "all of" nghĩa là phải có cả hai).
+5.  **Quy tắc MITRE (<mitre_payload>):**
+    * **Phân tích** 'MITRE Techniques' để tìm các LỆNH thay thế (ví dụ: 'makecab.exe ...', 'powershell.exe...Compression.ZipFile').
+    * **Tạo** một lựa chọn (trong 'weights') tên là "<mitre_choice>" để fuzzer chọn một trong các lệnh này. Quy tắc "rules" `<mitre_payload>` sẽ trỏ đến "<mitre_choice>".
+6.  **Trọng số (Weights):** Tất cả các lựa chọn ban đầu phải có trọng số là `1.0`.
+7.  **Tính Sáng tạo (Quan trọng):** Dựa trên logic của 'Thư viện Obfuscation', hãy **tự mình đề xuất thêm 1-2 biến thể obfuscation mới** (ví dụ: dùng biến môi trường như `%COMSPEC%`) và thêm chúng vào các quy tắc lựa chọn (choice) có liên quan.
+
+---
+### OUTPUT (CHỈ JSON):
+
+Chỉ trả về nội dung file JSON. Không giải thích. Không viết gì khác..
+### ĐẦU RA JSON MẪU (ONE-SHOT EXAMPLE)
+
+Đây là file JSON đầu ra "chuẩn" cho ví dụ trên:
+
+```json
+{{
+  "rules": {{
+    "<start>": "<wrapper_choice>",
+    "<payload>": "<sigma_payload>",
+    "<sigma_payload>": "<obf_whoami>"
+  }},
+  "weights": {{
+    "<wrapper_choice>": {{
+      "cmd.exe /c <payload>": 1.0,
+      "echo <payload> | cmd": 1.0
+    }},
+    "<obf_whoami>": {{
+      "\\"whoami.exe\\"": 1.0,
+      "\\"WHOAMI.EXE\\"": 1.0,
+      "\\"who^ami.exe\\"": 1.0,
+      "\\"who\\"\\"ami.exe\\"": 1.0
+    }}
+  }}
+}}
+```
+"""
+    return prompt.strip()
+
 def main(config_path):
-    # ---- BƯỚC 1: Tải Ngữ cảnh (Đã tách riêng) ----
     print(f"Đang tải cấu hình rule từ: {config_path}")
     config = load_rule_config(config_path)
     if config is None:
         return
 
-    # Lấy dữ liệu từ file config đã tải
-    rule_name = config.rule_name
-    sigma_detection = config.sigma_detection
-    mitre_techniques = config.mitre_techniques
-
-    # ---- BƯỚC 2: Tạo Prompt cho LLM/Search ----
-    # (Logic này giữ nguyên, giờ nó dùng các biến vừa tải)
-    prompt = f"""
-Hãy tạo một file văn phạm (grammar) định dạng JSON cho fuzzer,
-dựa trên các thông tin sau:
-
-1.  **Rule Sigma (detection):** {sigma_detection}
-2.  **Kỹ thuật thay thế (MITRE):** {mitre_techniques}
-3.  **Thư viện Wrapper (Python):** {get_wrappers()}
-4.  **Thư viện Obfuscation (Python):** {get_string_obfuscations.__doc__}
-5.  **Thư viện Noise (Python):** {get_noise()}
-
-File JSON phải có 2 key: 'rules' và 'weights'.
-- 'rules' định nghĩa cấu trúc (sequence hoặc terminal).
-- 'weights' định nghĩa các lựa chọn (choice) và trọng số ban đầu (luôn là 1.0).
-
-Văn phạm phải:
-1.  **<start>**: Chọn 1 wrapper từ Thư viện Wrapper.
-2.  **<payload>**: Chọn giữa <sigma_payload> (test từ khóa) VÀ <mitre_payload> (test logic).
-3.  **<sigma_payload>**: Là một chuỗi chứa <7z_obf> VÀ <dmp_file> VÀ <noise>.
-4.  **<7z_obf>**: Là lựa chọn giữa các biến thể làm rối của '7z.exe', '7zr.exe', '7za.exe'.
-5.  **<mitre_payload>**: Là lựa chọn giữa 'makecab.exe ...' VÀ 'powershell.exe ...'.
-"""
-
-    # ---- BƯỚC 3: Gọi Tool (LLM / Google Search) ----
-    print("Đang gọi LLM (mô phỏng bằng google_search) để tạo văn phạm...")
-    print(f"Prompt (rút gọn): {prompt[:200]}...")
-
-    # (Đây vẫn là dữ liệu JSON mô phỏng mà LLM trả về)
-    simulated_llm_output = {
-        "rules": {
-            "<start>": "<wrapper_choice>",
-            "<payload>": "<payload_choice>",
-            "<sigma_payload>": "<7z_obf> a <noise> <dmp_file>",
-            "<mitre_payload_cab>": "makecab.exe <dmp_file> archive.cab",
-            "<mitre_payload_psh>": "powershell.exe -c \"[System.IO.Compression.ZipFile]::CreateFromDirectory('C:\\temp', 'archive.zip')\"",
-            "<dmp_file>": "C:\\Windows\\Temp\\lsass.dmp"
-        },
-        "weights": {
-            "<wrapper_choice>": {
-                "cmd.exe /c <payload>": 1.0,
-                "echo <payload> | cmd": 1.0,
-                "%COMSPEC% /c <payload>": 1.0
-            },
-            "<payload_choice>": {
-                "<sigma_payload>": 1.0,
-                "<mitre_payload_cab>": 1.0,
-                "<mitre_payload_psh>": 1.0
-            },
-            "<7z_obf>": {
-                '"7z.exe"': 1.0, '"7Z.EXE"': 1.0, '"7z^.exe"': 1.0,
-                '"7z""exe"': 1.0, '"7zr.exe"': 1.0, '"7za.exe"': 1.0
-            },
-            "<noise>": { '""': 1.0, '&::': 1.0 }
-        }
-    }
-
-    # ---- BƯỚC 4: Lưu file Văn phạm (Dùng `rule_name`) ----
+    # Tạo prompt
+    prompt = generate_prompt(config)
     
-    # 1. Tạo tên thư mục (dùng biến `rule_name` từ file config)
-    output_dir = f"{rule_name}_fuzz_data"
-
-    # 2. Tạo thư mục này (nếu nó chưa tồn tại)
+    # Tạo thư mục output
+    output_dir = f"{config.rule_name}_fuzz_data"
     os.makedirs(output_dir, exist_ok=True)
-    print(f"Đã đảm bảo thư mục tồn tại: {output_dir}")
-
-    # 3. Tạo đường dẫn file văn phạm bên trong thư mục mới
-    output_filepath = os.path.join(output_dir, "grammar.json")
-
-    # 4. Lưu file JSON vào đường dẫn mới
-    with open(output_filepath, 'w', encoding='utf-8') as f:
-        json.dump(simulated_llm_output, f, indent=4)
-
-    print(f"Đã tạo file văn phạm tối ưu tại: {output_filepath}")
-
+    
+    # Lưu prompt vào file
+    prompt_filepath = os.path.join(output_dir, "prompt.txt")
+    with open(prompt_filepath, 'w', encoding='utf-8') as f:
+        f.write(prompt)
+    
+    print(f"✓ Đã tạo prompt tại: {prompt_filepath}")
+    print(f"\n--- PROMPT CONTENT ---\n{prompt}\n--- END PROMPT ---")
+    print(f"\nHãy copy prompt trên lên Gemini Web GUI để tạo grammar.json")
+    print(f"Sau đó lưu kết quả vào: {os.path.join(output_dir, 'grammar.json')}")
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Tạo Văn phạm Fuzzing (Grammar Generator) từ file cấu hình Rule")
+    parser = argparse.ArgumentParser(description="Tạo Prompt cho Gemini từ file cấu hình Rule")
     parser.add_argument(
         "-c", "--config",
         type=str,
         required=True,
-        help="Đường dẫn đến file cấu hình rule (ví dụ: rule_config_7zip.py)"
+        help="Đường dẫn đến file cấu hình rule (ví dụ: data/rule_config_7zip.py)"
     )
     args = parser.parse_args()
     
