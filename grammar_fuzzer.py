@@ -19,7 +19,9 @@ import re
 MUTATOR_DIR = "mutators" 
 QUEUE_FILE = "queue.txt"
 HASH_FILE = "tested_hashes.txt"
-FEEDBACK_FILE = "feedback.txt" # File Consumer sẽ ghi phản hồi Prio
+FEEDBACK_FILE = "feedback.txt"
+TEMP_WORKDIR = "temp_workdirs"  # Thêm dòng này
+os.makedirs(TEMP_WORKDIR, exist_ok=True)
 
 # --- Priority Flags ---
 # (Lấy từ producer.py)
@@ -58,13 +60,37 @@ class GrammarFuzzer:
         print("Fuzzer đã sẵn sàng.")
 
     def load_mutators(self):
-        # (Logic này lấy từ producer.py)
-        # ... (Giả sử hàm này tải các mutator từ MUTATOR_DIR) ...
-        print(f"Đã tải {len(self.mutators.get('generic', []))} mutator 'Havoc'")
-        # Tải BaseMutator
-        # Tải PowerShellConcat
-        # ... (Code đầy đủ của hàm load_mutators) ...
-        return {"generic": [], "cmd": [], "powershell": []} # Giả lập
+        """Tải các mutator từ MUTATOR_DIR"""
+        try:
+            from base_mutator import BaseMutator
+        except ImportError:
+            print("[ERROR] 'base_mutator.py' not found.")
+            return {"generic": [], "cmd": [], "powershell": []}
+
+        mutators = {"generic": [], "cmd": [], "powershell": []}
+        mutator_files = list(Path(MUTATOR_DIR).glob("*.py"))
+
+        for py_file in mutator_files:
+            if py_file.name in ["__init__.py"]:
+                continue
+
+            try:
+                spec = importlib.util.spec_from_file_location(py_file.stem, py_file)
+                module = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(module)
+
+                for attr_name in dir(module):
+                    attr = getattr(module, attr_name)
+                    if isinstance(attr, type) and issubclass(attr, BaseMutator) and attr is not BaseMutator:
+                        instance = attr()
+                        for tag in instance.tags:
+                            if tag in mutators:
+                                mutators[tag].append(instance)
+                                print(f"  [+] Loaded: {py_file.stem} (Tag: {tag})")
+            except Exception as e:
+                print(f"  [!] Error loading {py_file.name}: {e}")
+
+        return mutators
 
     def _weighted_choice(self, parent_rule_name):
         """Chọn 1 quy tắc con dựa trên trọng số (weights)"""
@@ -129,17 +155,36 @@ class GrammarFuzzer:
 
     def execute_command(self, command_string):
         """
-        Thực thi lệnh. (Lấy từ producer.py)
+        Thực thi lệnh và tạo thư mục temp theo ID
         """
-        # print(f"  [>] Đang thực thi: {command_string[:100]}...")
+        print(f"  [>] Đang thực thi: {command_string[:100]}...")
+        correlation_id = str(uuid.uuid4())
+        
+        # Tạo thư mục tạm
+        temp_dir_path = os.path.join(os.getcwd(), TEMP_WORKDIR, correlation_id)
+        try:
+            os.makedirs(temp_dir_path, exist_ok=True)
+        except Exception as e:
+            print(f"[ERROR] Could not create temp dir: {e}")
+            return False, correlation_id
+        
         try:
             result = subprocess.run(
                 command_string, shell=True, capture_output=True, 
-                text=True, timeout=10, encoding='utf-8'
+                text=True, timeout=10, encoding='utf-8',
+                cwd=temp_dir_path
             )
-            return result.returncode == 0
+            success = result.returncode == 0
         except Exception:
-            return False
+            success = False
+        
+        # Xóa thư mục tạm
+        try:
+            os.rmdir(temp_dir_path)
+        except:
+            pass
+            
+        return success, correlation_id
 
     def update_weights(self, path, feedback):
         """Cập nhật trọng số (weights) dựa trên Prio 1/2/3"""
@@ -209,8 +254,7 @@ class GrammarFuzzer:
         print(f"\n--- BẮT ĐẦU Fuzzing (PID: {os.getpid()}) ---")
         print(f"Theo dõi Queue: {QUEUE_FILE} | Phản hồi: {FEEDBACK_FILE}")
         
-        # Lưu trữ các "đường đi" (path) đang chờ phản hồi
-        pending_feedback = {} # {correlation_id: path}
+        pending_feedback = {}
         loop_count = 0
 
         while True:
@@ -223,7 +267,6 @@ class GrammarFuzzer:
             test_case = self.apply_havoc_mutations(smart_seed)
 
             # --- BƯỚC 3: CHECK HASH & THỰC THI ---
-            # (Logic từ producer.py)
             cmd_hash = hashlib.sha256(test_case.encode()).hexdigest()
             if cmd_hash in self.tested_hashes:
                 continue 
@@ -232,40 +275,35 @@ class GrammarFuzzer:
             self.hash_file_handle.write(f"{cmd_hash}\n")
             self.hash_file_handle.flush()
             
-            correlation_id = str(uuid.uuid4())
-            run_success = self.execute_command(test_case)
+            run_success, correlation_id = self.execute_command(test_case)
             
             # --- BƯỚC 4: GHI VÀO QUEUE ---
             # (Logic từ producer.py)
             with open(QUEUE_FILE, 'a', encoding='utf-8') as qf:
                 qf.write(f"{correlation_id}|{run_success}|cmd|{test_case}\n")
             
-            # Lưu lại path để chờ phản hồi
             pending_feedback[correlation_id] = path
             
-            # --- BƯỚC 5: KIỂM TRA PHẢN HỒI (HỌC HỎI) ---
+            # --- BƯỚC 5: KIỂM TRA PHẢN HỒI ---
             self.check_for_feedback()
             
-            # Xử lý các phản hồi đã nhận được
+            # Xử lý các phản hồi
             ids_to_remove = []
             for cid, feedback_prio in self.feedback_cache.items():
                 if cid in pending_feedback:
                     path_to_update = pending_feedback[cid]
-                    # --- BƯỚC 6: CẬP NHẬT TRỌNG SỐ ---
                     self.update_weights(path_to_update, feedback_prio)
-                    
                     del pending_feedback[cid]
                     ids_to_remove.append(cid)
             
-            # Xóa cache đã xử lý
             for cid in ids_to_remove:
                 del self.feedback_cache[cid]
 
-            # --- BƯỚC 7: LƯU TRỌNG SỐ (Định kỳ) ---
+            # --- BƯỚC 7: LƯU TRỌNG SỐ ---
             if loop_count % 100 == 0:
                 print(f"  [i] Đã chạy {loop_count} vòng. Đang lưu trọng số...")
                 self.save_weights()
-            
+
             # time.sleep(0.01) # Có thể thêm sleep nếu cần
 
 if __name__ == "__main__":

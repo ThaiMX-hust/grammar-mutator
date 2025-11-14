@@ -1,0 +1,52 @@
+{
+  "rules": {
+    "START": "<value>",
+
+    "<value>": "<value_choice>",
+    "<object>": "{ <members> }",
+    "<array>": "[ <elements> ]",
+    "<string>": "\"<chars>\"",
+    "<chars>": "<char_choice>",
+    "<number>": "<num_choice>",
+
+    "ELEMENT": "<value>",
+    "MEMBER": "<string> : <value>",
+
+    "<elements>": "<elements_choice>",
+    "<members>": "<members_choice>"
+  },
+
+  "weights": {
+    "<value_choice>": {
+      "<object>": 1.0,
+      "<array>": 1.0,
+      "<string>": 1.0,
+      "<number>": 1.0,
+      "true": 0.5,
+      "false": 0.5,
+      "null": 0.5
+    },
+    
+    "<char_choice>": {
+      "a": 1.0,
+      "b": 1.0,
+      "c": 1.0
+    },
+
+    "<num_choice>": {
+      "1": 1.0,
+      "2": 1.0,
+      "3": 1.0
+    },
+
+    "<elements_choice>": {
+      "<ELEMENT>": 1.0,
+      "<ELEMENT> , <elements>": 1.0
+    },
+    
+    "<members_choice>": {
+      "<MEMBER>": 1.0,
+      "<MEMBER> , <members>": 1.0
+    }
+  }
+}
