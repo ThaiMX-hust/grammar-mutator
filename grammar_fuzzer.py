@@ -20,7 +20,7 @@ MUTATOR_DIR = "mutators"
 QUEUE_FILE = "queue.txt"
 HASH_FILE = "tested_hashes.txt"
 FEEDBACK_FILE = "feedback.txt"
-TEMP_WORKDIR = "temp_workdirs"  # Thêm dòng này
+TEMP_WORKDIR = "temp_workdirs"  
 os.makedirs(TEMP_WORKDIR, exist_ok=True)
 
 # --- Priority Flags ---
@@ -57,6 +57,10 @@ class GrammarFuzzer:
             open(FEEDBACK_FILE, 'w').close() # Tạo file nếu chưa có
         self.feedback_handle = open(FEEDBACK_FILE, 'r')
         self.feedback_cache = {} # Lưu feedback đã đọc
+
+        # Thêm: Corpus lưu các test case thành công (để splice)
+        self.splice_corpus = []  # Lưu các test case Prio 1/2
+        
         print("Fuzzer đã sẵn sàng.")
 
     def load_mutators(self):
@@ -249,6 +253,60 @@ class GrammarFuzzer:
                 except Exception:
                     pass # Bỏ qua dòng lỗi
 
+    def add_to_splice_corpus(self, test_case, priority):
+        """Thêm test case thành công vào corpus để splice"""
+        if priority in [PRIO_1_BYPASS_SUCCESS, PRIO_2_BYPASS_FAIL]:
+            self.splice_corpus.append(test_case)
+            # Giới hạn kích thước corpus
+            if len(self.splice_corpus) > 100:
+                self.splice_corpus.pop(0)  # Xóa test case cũ nhất
+    
+    def splice_test_cases(self, test_case_a, test_case_b):
+        """
+        Lai ghép 2 test case:
+        1. Tách thành tokens (theo dấu cách, quotes, etc.)
+        2. Lấy ngẫu nhiên phần từ A và B
+        3. Ghép lại
+        """
+        # Tách thành tokens (giữ nguyên dấu ngoặc kép, quotes)
+        def tokenize(cmd):
+            # Regex để tách: giữ nguyên chuỗi trong "", '', và các ký tự đặc biệt
+            pattern = r'("[^"]*"|\'[^\']*\'|[^\s]+)'
+            return re.findall(pattern, cmd)
+        
+        tokens_a = tokenize(test_case_a)
+        tokens_b = tokenize(test_case_b)
+        
+        if not tokens_a or not tokens_b:
+            return test_case_a
+        
+        # Chọn ngẫu nhiên điểm cắt
+        splice_point_a = random.randint(1, len(tokens_a) - 1)
+        splice_point_b = random.randint(1, len(tokens_b) - 1)
+        
+        # Lai ghép: Lấy phần đầu của A + phần cuối của B
+        spliced_tokens = tokens_a[:splice_point_a] + tokens_b[splice_point_b:]
+        
+        return " ".join(spliced_tokens)
+    
+    def generate_spliced_seed(self):
+        """
+        Sinh test case bằng Splicing nếu có đủ corpus
+        """
+        if len(self.splice_corpus) < 2:
+            return None  # Không đủ test case để splice
+        
+        # Chọn ngẫu nhiên 2 test case
+        test_case_a = random.choice(self.splice_corpus)
+        test_case_b = random.choice(self.splice_corpus)
+        
+        if test_case_a == test_case_b:
+            return None  # Tránh splice với chính nó
+        
+        spliced = self.splice_test_cases(test_case_a, test_case_b)
+        print(f"  [SPLICE] {test_case_a[:30]}... + {test_case_b[:30]}...")
+        return spliced
+
     def main_loop(self):
         """Vòng lặp fuzzing chính"""
         print(f"\n--- BẮT ĐẦU Fuzzing (PID: {os.getpid()}) ---")
@@ -260,11 +318,21 @@ class GrammarFuzzer:
         while True:
             loop_count += 1
             
-            # --- BƯỚC 1: SINH MẪU ---
-            (smart_seed, path) = self.generate_smart_seed()
-            
-            # --- BƯỚC 2: ĐỘT BIẾN "LAI" (HYBRID) ---
-            test_case = self.apply_havoc_mutations(smart_seed)
+            # --- BƯỚC 1: SINH MẪU (Thêm Splicing) ---
+            # 30% cơ hội splice nếu có corpus
+            if random.random() < 0.3 and len(self.splice_corpus) >= 2:
+                spliced_seed = self.generate_spliced_seed()
+                if spliced_seed:
+                    test_case = spliced_seed
+                    path = ["<spliced>"]  # Đánh dấu là spliced
+                else:
+                    # Fallback sang grammar-based
+                    (smart_seed, path) = self.generate_smart_seed()
+                    test_case = self.apply_havoc_mutations(smart_seed)
+            else:
+                # Sinh từ grammar như cũ
+                (smart_seed, path) = self.generate_smart_seed()
+                test_case = self.apply_havoc_mutations(smart_seed)
 
             # --- BƯỚC 3: CHECK HASH & THỰC THI ---
             cmd_hash = hashlib.sha256(test_case.encode()).hexdigest()
@@ -278,7 +346,6 @@ class GrammarFuzzer:
             run_success, correlation_id = self.execute_command(test_case)
             
             # --- BƯỚC 4: GHI VÀO QUEUE ---
-            # (Logic từ producer.py)
             with open(QUEUE_FILE, 'a', encoding='utf-8') as qf:
                 qf.write(f"{correlation_id}|{run_success}|cmd|{test_case}\n")
             
@@ -292,6 +359,14 @@ class GrammarFuzzer:
             for cid, feedback_prio in self.feedback_cache.items():
                 if cid in pending_feedback:
                     path_to_update = pending_feedback[cid]
+                    
+                    # --- THÊM VÀO SPLICE CORPUS ---
+                    if feedback_prio in [PRIO_1_BYPASS_SUCCESS, PRIO_2_BYPASS_FAIL]:
+                        # Lấy lại test case từ queue (cần lưu trước đó)
+                        # Hoặc lưu vào dict tạm
+                        # Đơn giản: Đọc lại từ interesting_finds
+                        self.add_to_splice_corpus(test_case, feedback_prio)
+                    
                     self.update_weights(path_to_update, feedback_prio)
                     del pending_feedback[cid]
                     ids_to_remove.append(cid)
@@ -302,6 +377,7 @@ class GrammarFuzzer:
             # --- BƯỚC 7: LƯU TRỌNG SỐ ---
             if loop_count % 100 == 0:
                 print(f"  [i] Đã chạy {loop_count} vòng. Đang lưu trọng số...")
+                print(f"  [i] Splice Corpus: {len(self.splice_corpus)} test cases")
                 self.save_weights()
 
             # time.sleep(0.01) # Có thể thêm sleep nếu cần
