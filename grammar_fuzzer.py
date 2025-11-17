@@ -13,6 +13,7 @@ import uuid
 import argparse
 import json
 import re
+from minimizer import TestCaseMinimizer
 
 # --- Cấu hình ---
 # (Lấy từ producer.py)
@@ -61,6 +62,11 @@ class GrammarFuzzer:
         # Thêm: Corpus lưu các test case thành công (để splice)
         self.splice_corpus = []  # Lưu các test case Prio 1/2
         
+        # Khởi tạo TestCaseMinimizer
+        self.minimizer = TestCaseMinimizer(self)
+        self.path_coverage = {}
+        self.rare_path_boost = 1.5
+
         print("Fuzzer đã sẵn sàng.")
 
     def load_mutators(self):
@@ -307,6 +313,51 @@ class GrammarFuzzer:
         print(f"  [SPLICE] {test_case_a[:30]}... + {test_case_b[:30]}...")
         return spliced
 
+    def minimize_test_case(self, test_case, correlation_id):
+        """
+        Thu nhỏ test case bằng cách xóa từng phần tử và kiểm tra lại
+        Chỉ áp dụng cho Prio 1 (Bypass thành công)
+        """
+        print(f"  [MIN] Đang thu nhỏ test case...")
+        
+        # Tokenize
+        def tokenize(cmd):
+            pattern = r'("[^"]*"|\'[^\']*\'|[^\s]+)'
+            return re.findall(pattern, cmd)
+        
+        tokens = tokenize(test_case)
+        if len(tokens) <= 2:  # Quá ngắn, không thu nhỏ
+            return test_case
+        
+        minimal_tokens = tokens.copy()
+        
+        # Thử xóa từng token
+        for i in range(len(tokens) - 1, -1, -1):  # Đi ngược từ cuối
+            if i == 0:  # Không xóa token đầu (thường là wrapper)
+                continue
+                
+            test_tokens = minimal_tokens[:i] + minimal_tokens[i+1:]
+            test_cmd = " ".join(test_tokens)
+            
+            # Thực thi test
+            success, temp_id = self.execute_command(test_cmd)
+            
+            # Đợi Consumer kiểm tra (ngắn hơn vòng lặp chính)
+            time.sleep(5)
+            
+            # Kiểm tra SIEM
+            # (Cần Consumer hỗ trợ API sync hoặc đọc feedback nhanh)
+            # Giả sử: Nếu vẫn bypass thì giữ version rút gọn
+            if success:  # Simplified check
+                minimal_tokens = test_tokens
+                print(f"    [-] Xóa token {i}: '{tokens[i]}' -> Vẫn bypass")
+            else:
+                print(f"    [+] Giữ token {i}: '{tokens[i]}' -> Cần thiết")
+        
+        minimal_cmd = " ".join(minimal_tokens)
+        print(f"  [MIN] Kết quả: {test_case[:50]}... -> {minimal_cmd[:50]}...")
+        return minimal_cmd
+
     def main_loop(self):
         """Vòng lặp fuzzing chính"""
         print(f"\n--- BẮT ĐẦU Fuzzing (PID: {os.getpid()}) ---")
@@ -349,7 +400,11 @@ class GrammarFuzzer:
             with open(QUEUE_FILE, 'a', encoding='utf-8') as qf:
                 qf.write(f"{correlation_id}|{run_success}|cmd|{test_case}\n")
             
-            pending_feedback[correlation_id] = path
+            # Lưu test case vào dict tạm để minimize sau
+            pending_feedback[correlation_id] = {
+                "path": path,
+                "test_case": test_case
+            }
             
             # --- BƯỚC 5: KIỂM TRA PHẢN HỒI ---
             self.check_for_feedback()
@@ -358,14 +413,21 @@ class GrammarFuzzer:
             ids_to_remove = []
             for cid, feedback_prio in self.feedback_cache.items():
                 if cid in pending_feedback:
-                    path_to_update = pending_feedback[cid]
+                    data = pending_feedback[cid]
+                    path_to_update = data["path"]
+                    original_test_case = data["test_case"]
                     
-                    # --- THÊM VÀO SPLICE CORPUS ---
-                    if feedback_prio in [PRIO_1_BYPASS_SUCCESS, PRIO_2_BYPASS_FAIL]:
-                        # Lấy lại test case từ queue (cần lưu trước đó)
-                        # Hoặc lưu vào dict tạm
-                        # Đơn giản: Đọc lại từ interesting_finds
-                        self.add_to_splice_corpus(test_case, feedback_prio)
+                    if feedback_prio == PRIO_1_BYPASS_SUCCESS:
+                        # Minimize
+                        minimal = self.minimizer.minimize(original_test_case)
+                        
+                        # Lưu seed
+                        seed_file = f"seeds/cmd_min_{int(time.time())}.txt"
+                        with open(seed_file, 'w') as f:
+                            f.write(minimal)
+                        
+                        # Thêm vào splice corpus
+                        self.add_to_splice_corpus(minimal, feedback_prio)
                     
                     self.update_weights(path_to_update, feedback_prio)
                     del pending_feedback[cid]
@@ -380,7 +442,7 @@ class GrammarFuzzer:
                 print(f"  [i] Splice Corpus: {len(self.splice_corpus)} test cases")
                 self.save_weights()
 
-            # time.sleep(0.01) # Có thể thêm sleep nếu cần
+                time.sleep(0.01) # Có thể thêm sleep nếu cần
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Grammar Fuzzer (thay thế producer.py)")
