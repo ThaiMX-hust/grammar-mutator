@@ -1,0 +1,43 @@
+{
+  "<START>": [
+    ["<BINARY>", "<SEP>", "<ACTION>", "<SEP>", "<OUTPUT>", "<SEP>", "<INPUT_TARGET>"]
+  ],
+
+  "// --- Phần 1: Binary (7z) ---": "",
+  "<BINARY>": [
+    ["7z.exe"], ["7z"], ["\"7z.exe\""], ["7^z.exe"], ["7z.E^x^e"]
+  ],
+
+  "// --- Phần 2: Hành động (Archive) ---": "",
+  "<ACTION>": [
+    ["a"], ["u"] // a=add, u=update (hành vi tương tự)
+  ],
+
+  "// --- Phần 3: Dấu phân cách ---": "",
+  "<SEP>": [
+    [" "], ["  "], ["\t"], [","], ["^ "]
+  ],
+
+  "// --- Phần 4: File đầu ra (Không quan trọng lắm) ---": "",
+  "<OUTPUT>": [
+    ["out.7z"], ["backup.zip"], ["temp"]
+  ],
+
+  "// --- Phần 5: Target (Trọng tâm Bypass) ---": "",
+  "<INPUT_TARGET>": [
+    // 1. Direct match (để kiểm chứng fuzzer có chạy)
+    ["process.dmp"],
+    
+    // 2. CMD Obfuscation (Caret)
+    ["process.d^mp"], ["process.dum^p"], ["process.h^dmp"],
+    
+    // 3. Quote Insertion (Phá vỡ chuỗi liên tục)
+    ["\"process.dmp\""], ["process\".dmp"], ["process.d\"mp"],
+    
+    // 4. Wildcards (7zip tự resolve file, Sigma thấy ký tự lạ)
+    ["*.dmp"], ["process.d?p"], ["process.dum?"],
+    
+    // 5. Path variations
+    [".\\process.dmp"], ["$PWD\\process.dmp"]
+  ]
+}
