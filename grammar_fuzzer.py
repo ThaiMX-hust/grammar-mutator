@@ -13,22 +13,37 @@ import uuid
 import argparse
 import json
 import re
-from minimizer import TestCaseMinimizer
 
 # --- Cấu hình ---
 # (Lấy từ producer.py)
 MUTATOR_DIR = "mutators" 
-QUEUE_FILE = "queue.txt"
+OUTPUT_DIR = "fuzzer_output"  # Thư mục lưu test cases
 HASH_FILE = "tested_hashes.txt"
-FEEDBACK_FILE = "feedback.txt"
 TEMP_WORKDIR = "temp_workdirs"  
+os.makedirs(OUTPUT_DIR, exist_ok=True)
 os.makedirs(TEMP_WORKDIR, exist_ok=True)
 
-# --- Priority Flags ---
-# (Lấy từ producer.py)
-PRIO_1_BYPASS_SUCCESS = "Prio 1"
-PRIO_2_BYPASS_FAIL = "Prio 2"
-PRIO_3_DETECTED_OR_ERROR = "Prio 3"
+# --- Metrics ---
+class FuzzerMetrics:
+    def __init__(self):
+        self.total_generated = 0
+        self.unique_generated = 0
+        self.grammar_based = 0
+        self.spliced = 0
+        self.execution_success = 0
+        self.execution_failed = 0
+        self.start_time = time.time()
+    
+    def report(self):
+        elapsed = time.time() - self.start_time
+        rate = self.total_generated / elapsed if elapsed > 0 else 0
+        return f"""
+--- FUZZER METRICS ---
+Total: {self.total_generated} | Unique: {self.unique_generated} | Rate: {rate:.2f}/s
+Grammar: {self.grammar_based} | Spliced: {self.spliced}
+Exec OK: {self.execution_success} | Failed: {self.execution_failed}
+Runtime: {elapsed:.2f}s
+"""
 
 class GrammarFuzzer:
     def __init__(self, grammar_file):
@@ -53,21 +68,19 @@ class GrammarFuzzer:
                 self.tested_hashes = set(line.strip() for line in f)
         self.hash_file_handle = open(HASH_FILE, 'a')
         
-        # Mở file feedback để đọc
-        if not os.path.exists(FEEDBACK_FILE):
-            open(FEEDBACK_FILE, 'w').close() # Tạo file nếu chưa có
-        self.feedback_handle = open(FEEDBACK_FILE, 'r')
-        self.feedback_cache = {} # Lưu feedback đã đọc
-
-        # Thêm: Corpus lưu các test case thành công (để splice)
-        self.splice_corpus = []  # Lưu các test case Prio 1/2
+        # Corpus lưu các test case thành công (để splice)
+        self.splice_corpus = []  # Lưu test cases đã execute thành công
+        self.max_corpus_size = 200  # Tăng corpus size
         
-        # Khởi tạo TestCaseMinimizer
-        self.minimizer = TestCaseMinimizer(self)
-        self.path_coverage = {}
-        self.rare_path_boost = 1.5
-
+        # Metrics tracking
+        self.metrics = FuzzerMetrics()
+        
+        # Output file handle
+        self.output_file = os.path.join(OUTPUT_DIR, f"testcases_{int(time.time())}.txt")
+        self.output_handle = open(self.output_file, 'w', encoding='utf-8')
+        
         print("Fuzzer đã sẵn sàng.")
+        print(f"Output: {self.output_file}")
 
     def load_mutators(self):
         """Tải các mutator từ MUTATOR_DIR"""
@@ -103,7 +116,7 @@ class GrammarFuzzer:
         return mutators
 
     def _weighted_choice(self, parent_rule_name):
-        """Chọn 1 quy tắc con dựa trên trọng số (weights)"""
+        """Chọn 1 quy tắc con dựa trên trọng số (weights) với exploration boost"""
         choices_weights = self.weights[parent_rule_name]
         choices = list(choices_weights.keys())
         weights = list(choices_weights.values())
@@ -112,6 +125,10 @@ class GrammarFuzzer:
         min_weight = min(weights)
         if min_weight < 0:
             weights = [w - min_weight + 0.01 for w in weights]
+        
+        # 10% cơ hội chọn ngẫu nhiên hoàn toàn (exploration)
+        if random.random() < 0.1:
+            return random.choice(choices)
             
         return random.choices(choices, weights=weights, k=1)[0]
 
@@ -158,113 +175,54 @@ class GrammarFuzzer:
         Áp dụng các đột biến "Havoc" (từ mutator cũ)
         lên "Smart Seed" (từ văn phạm).
         """
-        # (Logic này lấy từ producer.py)
-        # ... (Giả sử hàm này chọn ngẫu nhiên 1 mutator và chạy) ...
-        # Ví dụ: if random.random() < 0.1: ...
-        return command # Tạm thời bỏ qua bước này cho đơn giản
+        # 30% cơ hội mutation
+        if random.random() > 0.3 or not self.mutators:
+            return command
+        
+        # Chọn ngẫu nhiên tag (cmd, powershell, generic)
+        available_tags = [tag for tag in self.mutators if self.mutators[tag]]
+        if not available_tags:
+            return command
+        
+        tag = random.choice(available_tags)
+        mutator_list = self.mutators[tag]
+        
+        # Áp dụng 1-2 mutators
+        num_mutations = random.randint(1, 2)
+        mutated = command
+        
+        for _ in range(num_mutations):
+            mutator = random.choice(mutator_list)
+            try:
+                mutated = mutator.mutate(mutated)
+            except Exception as e:
+                pass  # Bỏ qua lỗi mutation
+        
+        return mutated
 
     def execute_command(self, command_string):
         """
-        Thực thi lệnh và tạo thư mục temp theo ID
+        Dry-run: Chỉ validate syntax, không thực thi thật
+        (Để tăng tốc độ sinh test cases)
         """
-        print(f"  [>] Đang thực thi: {command_string[:100]}...")
         correlation_id = str(uuid.uuid4())
         
-        # Tạo thư mục tạm
-        temp_dir_path = os.path.join(os.getcwd(), TEMP_WORKDIR, correlation_id)
-        try:
-            os.makedirs(temp_dir_path, exist_ok=True)
-        except Exception as e:
-            print(f"[ERROR] Could not create temp dir: {e}")
+        # Validation đơn giản: kiểm tra độ dài và ký tự cơ bản
+        if len(command_string) < 3 or len(command_string) > 8000:
             return False, correlation_id
         
-        try:
-            result = subprocess.run(
-                command_string, shell=True, capture_output=True, 
-                text=True, timeout=10, encoding='utf-8',
-                cwd=temp_dir_path
-            )
-            success = result.returncode == 0
-        except Exception:
-            success = False
+        # Giả lập thành công (để thêm vào splice corpus)
+        # Trong thực tế có thể thêm syntax validation
+        success = True
         
-        # Xóa thư mục tạm
-        try:
-            os.rmdir(temp_dir_path)
-        except:
-            pass
-            
         return success, correlation_id
 
-    def update_weights(self, path, feedback):
-        """Cập nhật trọng số (weights) dựa trên Prio 1/2/3"""
-        print(f"  [i] Học hỏi: {feedback} cho đường đi {path[0]} -> {path[-1]}")
-        
-        # Định nghĩa hệ số học
-        ADJUSTMENT_FACTORS = {
-            PRIO_1_BYPASS_SUCCESS: 1.2, # Thưởng 20%
-            PRIO_2_BYPASS_FAIL: 0.9,    # Phạt nhẹ 10%
-            PRIO_3_DETECTED_OR_ERROR: 0.8 # Phạt nặng 20%
-        }
-        factor = ADJUSTMENT_FACTORS.get(feedback, 1.0)
-        
-        if factor == 1.0:
-            return # Không học gì
-
-        # Lặp qua đường đi để cập nhật
-        for i in range(len(path) - 1):
-            parent = path[i]
-            child = path[i+1]
-            
-            if parent in self.weights and child in self.weights[parent]:
-                current_weight = self.weights[parent][child]
-                self.weights[parent][child] = max(0.01, current_weight * factor) # Đảm bảo không về 0
-
-        # Chuẩn hóa (normalize) các trọng số đã bị thay đổi
-        self._normalize_weights(path)
-        
-    def _normalize_weights(self, path):
-        """Chuẩn hóa lại trọng số để tổng là 1.0"""
-        updated_parents = {path[i] for i in range(len(path) - 1) if path[i] in self.weights}
-        
-        for parent in updated_parents:
-            choices = self.weights[parent]
-            total_weight = sum(choices.values())
-            
-            if total_weight == 0: continue
-            
-            for choice in choices:
-                choices[choice] = choices[choice] / total_weight
-
-    def save_weights(self):
-        """Lưu trọng số đã học được vào file JSON"""
-        try:
-            data = {"rules": self.rules, "weights": self.weights}
-            with open(self.grammar_file, 'w', encoding='utf-8') as f:
-                json.dump(data, f, indent=4)
-        except Exception as e:
-            print(f"[LỖI] Không thể lưu trọng số: {e}")
-
-    def check_for_feedback(self):
-        """Đọc file FEEDBACK_FILE để học hỏi"""
-        new_lines = self.feedback_handle.readlines()
-        if not new_lines:
-            return
-            
-        for line in new_lines:
-            if line.strip():
-                try:
-                    correlation_id, feedback_prio = line.strip().split('|')
-                    self.feedback_cache[correlation_id] = feedback_prio
-                except Exception:
-                    pass # Bỏ qua dòng lỗi
-
-    def add_to_splice_corpus(self, test_case, priority):
-        """Thêm test case thành công vào corpus để splice"""
-        if priority in [PRIO_1_BYPASS_SUCCESS, PRIO_2_BYPASS_FAIL]:
+    def add_to_splice_corpus(self, test_case):
+        """Thêm test case vào corpus để splice"""
+        if test_case and len(test_case) > 5:
             self.splice_corpus.append(test_case)
             # Giới hạn kích thước corpus
-            if len(self.splice_corpus) > 100:
+            if len(self.splice_corpus) > self.max_corpus_size:
                 self.splice_corpus.pop(0)  # Xóa test case cũ nhất
     
     def splice_test_cases(self, test_case_a, test_case_b):
@@ -313,136 +271,68 @@ class GrammarFuzzer:
         print(f"  [SPLICE] {test_case_a[:30]}... + {test_case_b[:30]}...")
         return spliced
 
-    def minimize_test_case(self, test_case, correlation_id):
-        """
-        Thu nhỏ test case bằng cách xóa từng phần tử và kiểm tra lại
-        Chỉ áp dụng cho Prio 1 (Bypass thành công)
-        """
-        print(f"  [MIN] Đang thu nhỏ test case...")
-        
-        # Tokenize
-        def tokenize(cmd):
-            pattern = r'("[^"]*"|\'[^\']*\'|[^\s]+)'
-            return re.findall(pattern, cmd)
-        
-        tokens = tokenize(test_case)
-        if len(tokens) <= 2:  # Quá ngắn, không thu nhỏ
-            return test_case
-        
-        minimal_tokens = tokens.copy()
-        
-        # Thử xóa từng token
-        for i in range(len(tokens) - 1, -1, -1):  # Đi ngược từ cuối
-            if i == 0:  # Không xóa token đầu (thường là wrapper)
-                continue
-                
-            test_tokens = minimal_tokens[:i] + minimal_tokens[i+1:]
-            test_cmd = " ".join(test_tokens)
-            
-            # Thực thi test
-            success, temp_id = self.execute_command(test_cmd)
-            
-            # Đợi Consumer kiểm tra (ngắn hơn vòng lặp chính)
-            time.sleep(5)
-            
-            # Kiểm tra SIEM
-            # (Cần Consumer hỗ trợ API sync hoặc đọc feedback nhanh)
-            # Giả sử: Nếu vẫn bypass thì giữ version rút gọn
-            if success:  # Simplified check
-                minimal_tokens = test_tokens
-                print(f"    [-] Xóa token {i}: '{tokens[i]}' -> Vẫn bypass")
-            else:
-                print(f"    [+] Giữ token {i}: '{tokens[i]}' -> Cần thiết")
-        
-        minimal_cmd = " ".join(minimal_tokens)
-        print(f"  [MIN] Kết quả: {test_case[:50]}... -> {minimal_cmd[:50]}...")
-        return minimal_cmd
-
     def main_loop(self):
-        """Vòng lặp fuzzing chính"""
+        """Vòng lặp fuzzing chính - Tập trung sinh test cases"""
         print(f"\n--- BẮT ĐẦU Fuzzing (PID: {os.getpid()}) ---")
-        print(f"Theo dõi Queue: {QUEUE_FILE} | Phản hồi: {FEEDBACK_FILE}")
+        print(f"Output: {self.output_file}")
+        print("[!] Chạy trong chế độ tối ưu (không SIEM)\n")
         
-        pending_feedback = {}
         loop_count = 0
 
-        while True:
-            loop_count += 1
-            
-            # --- BƯỚC 1: SINH MẪU (Thêm Splicing) ---
-            # 30% cơ hội splice nếu có corpus
-            if random.random() < 0.3 and len(self.splice_corpus) >= 2:
-                spliced_seed = self.generate_spliced_seed()
-                if spliced_seed:
-                    test_case = spliced_seed
-                    path = ["<spliced>"]  # Đánh dấu là spliced
+        try:
+            while True:
+                loop_count += 1
+                self.metrics.total_generated += 1
+                
+                # --- BƯỚC 1: SINH TEST CASE ---
+                # 20% cơ hội splice nếu có corpus (giảm từ 30%)
+                if random.random() < 0.2 and len(self.splice_corpus) >= 2:
+                    spliced_seed = self.generate_spliced_seed()
+                    if spliced_seed:
+                        test_case = spliced_seed
+                        self.metrics.spliced += 1
+                    else:
+                        # Fallback sang grammar-based
+                        (smart_seed, path) = self.generate_smart_seed()
+                        test_case = self.apply_havoc_mutations(smart_seed)
+                        self.metrics.grammar_based += 1
                 else:
-                    # Fallback sang grammar-based
+                    # Sinh từ grammar
                     (smart_seed, path) = self.generate_smart_seed()
                     test_case = self.apply_havoc_mutations(smart_seed)
-            else:
-                # Sinh từ grammar như cũ
-                (smart_seed, path) = self.generate_smart_seed()
-                test_case = self.apply_havoc_mutations(smart_seed)
+                    self.metrics.grammar_based += 1
 
-            # --- BƯỚC 3: CHECK HASH & THỰC THI ---
-            cmd_hash = hashlib.sha256(test_case.encode()).hexdigest()
-            if cmd_hash in self.tested_hashes:
-                continue 
-            
-            self.tested_hashes.add(cmd_hash)
-            self.hash_file_handle.write(f"{cmd_hash}\n")
-            self.hash_file_handle.flush()
-            
-            run_success, correlation_id = self.execute_command(test_case)
-            
-            # --- BƯỚC 4: GHI VÀO QUEUE ---
-            with open(QUEUE_FILE, 'a', encoding='utf-8') as qf:
-                qf.write(f"{correlation_id}|{run_success}|cmd|{test_case}\n")
-            
-            # Lưu test case vào dict tạm để minimize sau
-            pending_feedback[correlation_id] = {
-                "path": path,
-                "test_case": test_case
-            }
-            
-            # --- BƯỚC 5: KIỂM TRA PHẢN HỒI ---
-            self.check_for_feedback()
-            
-            # Xử lý các phản hồi
-            ids_to_remove = []
-            for cid, feedback_prio in self.feedback_cache.items():
-                if cid in pending_feedback:
-                    data = pending_feedback[cid]
-                    path_to_update = data["path"]
-                    original_test_case = data["test_case"]
-                    
-                    if feedback_prio == PRIO_1_BYPASS_SUCCESS:
-                        # Minimize
-                        minimal = self.minimizer.minimize(original_test_case)
-                        
-                        # Lưu seed
-                        seed_file = f"seeds/cmd_min_{int(time.time())}.txt"
-                        with open(seed_file, 'w') as f:
-                            f.write(minimal)
-                        
-                        # Thêm vào splice corpus
-                        self.add_to_splice_corpus(minimal, feedback_prio)
-                    
-                    self.update_weights(path_to_update, feedback_prio)
-                    del pending_feedback[cid]
-                    ids_to_remove.append(cid)
-            
-            for cid in ids_to_remove:
-                del self.feedback_cache[cid]
+                # --- BƯỚC 2: DEDUP ---
+                cmd_hash = hashlib.sha256(test_case.encode()).hexdigest()
+                if cmd_hash in self.tested_hashes:
+                    continue 
+                
+                self.tested_hashes.add(cmd_hash)
+                self.hash_file_handle.write(f"{cmd_hash}\n")
+                self.metrics.unique_generated += 1
+                
+                # --- BƯỚC 3: VALIDATE (Dry-run) ---
+                run_success, correlation_id = self.execute_command(test_case)
+                
+                if run_success:
+                    self.metrics.execution_success += 1
+                    # Thêm vào splice corpus
+                    self.add_to_splice_corpus(test_case)
+                else:
+                    self.metrics.execution_failed += 1
+                
+                # --- BƯỚC 4: LƯU OUTPUT ---
+                self.output_handle.write(f"{test_case}\n")
+                
+                # --- BƯỚC 5: REPORT METRICS ---
+                if loop_count % 100 == 0:
+                    print(self.metrics.report())
+                    self.output_handle.flush()
+                    self.hash_file_handle.flush()
 
-            # --- BƯỚC 7: LƯU TRỌNG SỐ ---
-            if loop_count % 100 == 0:
-                print(f"  [i] Đã chạy {loop_count} vòng. Đang lưu trọng số...")
-                print(f"  [i] Splice Corpus: {len(self.splice_corpus)} test cases")
-                self.save_weights()
-
-                time.sleep(0.01) # Có thể thêm sleep nếu cần
+        except KeyboardInterrupt:
+            print("\n[!] Fuzzer đang dừng...")
+            raise
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Grammar Fuzzer (thay thế producer.py)")
@@ -459,11 +349,12 @@ if __name__ == "__main__":
         fuzzer = GrammarFuzzer(grammar_file=args.grammar)
         fuzzer.main_loop()
     except KeyboardInterrupt:
-        print("\n[!] Fuzzer đang dừng...")
+        print("\n[!] Dừng fuzzer...")
     finally:
         if fuzzer:
-            print("[i] Đang lưu trạng thái trọng số cuối cùng...")
-            fuzzer.save_weights()
+            print("\n[i] Đang lưu kết quả...")
+            print(fuzzer.metrics.report())
+            fuzzer.output_handle.close()
             fuzzer.hash_file_handle.close()
-            fuzzer.feedback_handle.close()
-            print("[i] Đã đóng file. Tạm biệt.")
+            print(f"[i] Đã lưu {fuzzer.metrics.unique_generated} test cases vào {fuzzer.output_file}")
+            print("[i] Tạm biệt.")

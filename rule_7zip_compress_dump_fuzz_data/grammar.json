@@ -1,48 +1,37 @@
 {
   "rules": {
-    "<start>": "<wrapper_choice>",
-    "<payload>": "<payload_choice>",
-    "<sigma_payload>": "<obf_executable> a <noise> C:\\Temp\\archive.zip C:\\Windows\\Temp\\*<obf_extension>",
-    "<noise>": "<noise_choice>",
-    "<mitre_payload>": "<mitre_choice>"
+    "<start>": "<wrapper_with_payload>",
+    "<wrapper_with_payload>": "<wrapper_base> <wrapper_flag> <payload>",
+    "<wrapper_base>": "<wrapper_base_choice>",
+    "<wrapper_flag>": "<wrapper_flag_choice>",
+    "<payload>": "<obf_executable> a <noise> C:\\Temp\\archive.zip C:\\Windows\\Temp\\*<obf_extension>",
+    "<noise>": "<noise_choice>"
   },
   "weights": {
-    "<wrapper_choice>": {
-      "cmd.exe /c <payload>": 1.0,
-      "cmd.exe /r <payload>": 1.0,
-      "echo <payload> | cmd": 1.0,
-      "%COMSPEC% /c <payload>": 1.0
+    "<wrapper_base_choice>": {
+      "cmd.exe": 1.0,
+      "CMD.EXE": 1.0,
+      "%COMSPEC%": 1.0,
+      "('cmd' + '.exe')": 1.0
     },
-    "<payload_choice>": {
-      "<sigma_payload>": 1.0,
-      "<mitre_payload>": 1.0
+    "<wrapper_flag_choice>": {
+      "/c": 1.0,
+      "/r": 1.0
     },
     "<obf_executable>": {
-      "\"7z.exe\"": 1.0,
-      "\"7Z.EXE\"": 1.0,
-      "\"7z^a.exe\"": 1.0,
-      "\"7z\"\".exe\"": 1.0,
-      "\"7zr\"&\".exe\"": 1.0,
-      "\"%ProgramFiles%\\7-Zip\\7z.exe\"": 1.0
+      "7z.exe": 1.0,
+      "7Z.EXE": 1.0,
+      "7z^a.exe": 1.0
     },
     "<obf_extension>": {
       ".dmp": 1.0,
-      "\".dump\"": 1.0,
-      "'.hdmp'": 1.0,
-      ".d^mp": 1.0,
-      ".du\"\"mp": 1.0,
-      ".h\"&\"dmp": 1.0
+      ".dump": 1.0,
+      ".d^mp": 1.0
     },
     "<noise_choice>": {
-      "\"\"": 1.0,
+      "": 1.0,
       "&::": 1.0,
-      "REM rác": 1.0,
-      "": 1.0
-    },
-    "<mitre_choice>": {
-      "makecab.exe C:\\Users\\Public\\lsass.dmp C:\\Temp\\lsass.cab": 1.0,
-      "powershell.exe -c \"[System.IO.Compression.ZipFile]::CreateFromDirectory('C:\\Users\\Public\\dumps', 'C:\\Temp\\dumps.zip')\"": 1.0,
-      "pwsh.exe -c \"Add-Type -A System.IO.Compression.FileSystem; [IO.Compression.ZipFile]::CreateFromDirectory('C:\\Users\\Public\\dumps', 'C:\\Temp\\dumps.zip')\"": 1.0
+      "& REM x": 1.0
     }
   }
 }
