@@ -41,3 +41,9 @@
     [".\\process.dmp"], ["$PWD\\process.dmp"]
   ]
 }
+
+"<CHAR_L>": [
+    {"value": ["l"], "weight": 10},    // Bình thường: xác suất cao
+    {"value": ["^l"], "weight": 5},    // Caret: xác suất vừa
+    {"value": ["\"l\""], "weight": 1}  // Quote: xác suất thấp (dùng ít thôi kẻo hỏng lệnh)
+]

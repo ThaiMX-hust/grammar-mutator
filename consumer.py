@@ -95,15 +95,18 @@ class ConsumerSIEM:
         """
         processing_file = "queue.processing.txt"
         try:
+            # Change the filename to avoid override
             os.rename(QUEUE_FILE, processing_file)
         except FileNotFoundError:
             print("  [~] Không có file queue nào để xử lý.")
             return
 
+        # Dict: {id: {"success": bool, "cmd": str, "tags": list}}
         commands_to_check = {} 
         with open(processing_file, 'r', encoding='utf-8') as f:
             for line in f:
                 try:
+                    # Format: ID|RunSuccess|Tags|Command
                     cid, success_str, tags_str, cmd = line.strip().split('|', 3)
                     commands_to_check[cid] = {
                         "success": (success_str == 'True'),
@@ -118,6 +121,7 @@ class ConsumerSIEM:
         if not commands_to_check:
             return
 
+        # SIEM query
         all_ids = list(commands_to_check.keys())
         detected_ids = self.query_siem_for_ids(all_ids)
 
@@ -132,10 +136,12 @@ class ConsumerSIEM:
                 
                 priority = PRIO_3_DETECTED_OR_ERROR
 
-                if not was_detected and run_success:
-                    priority = PRIO_1_BYPASS_SUCCESS
-                elif not was_detected and not run_success:
-                    priority = PRIO_2_BYPASS_FAIL
+            if not was_detected and run_success:
+                # Successful bypass and valid requests
+                priority = PRIO_1_BYPASS_SUCCESS
+            elif not was_detected and not run_success:
+                # Valid but not successful
+                priority = PRIO_2_BYPASS_FAIL
 
                 # Ghi feedback
                 priority_name = f"Prio {priority}"
