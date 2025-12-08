@@ -1,0 +1,58 @@
+{
+  "rules": {
+    "<start>": "<wrapper>",
+    "<sigma_payload>": "powershell <obf_noni> <obf_ep> <obf_bypass> <obf_dollar>",
+    "<mitre_payload>": "<mitre_choice>"
+  },
+  "weights": {
+    "<wrapper>": {
+      "cmd.exe /c <payload>": 0.2,
+      "cmd.exe /r <payload>": 0.15,
+      "echo <payload> | cmd": 0.15,
+      "%COMSPEC% /c <payload>": 0.2,
+      "powershell -c <payload>": 0.15,
+      "<payload>": 0.15
+    },
+    "<payload>": {
+      "<sigma_payload>": 0.6,
+      "<mitre_payload>": 0.4
+    },
+    "<obf_noni>": {
+      "-noni": 0.3,
+      "-NoNI": 0.2,
+      "-NonInteractive": 0.2,
+      "-no^ni": 0.15,
+      "('-no'+'ni')": 0.15
+    },
+    "<obf_ep>": {
+      "-ep": 0.3,
+      "-EP": 0.2,
+      "-ExecutionPolicy": 0.2,
+      "-e^p": 0.15,
+      "('-e'+'p')": 0.15
+    },
+    "<obf_bypass>": {
+      "bypass": 0.3,
+      "Bypass": 0.2,
+      "BYPASS": 0.15,
+      "by`pass": 0.2,
+      "('by'+'pass')": 0.15
+    },
+    "<obf_dollar>": {
+      "$": 0.3,
+      "$env:TEMP": 0.25,
+      "$PSVersionTable": 0.2,
+      "$(Get-Process)": 0.15,
+      "$_": 0.1
+    },
+    "<mitre_choice>": {
+      "powershell.exe -ExecutionPolicy Bypass -NoProfile -Command \"Write-Host test\"": 0.2,
+      "powershell -NoNI -EP Bypass -C \"Write-Host test\"": 0.18,
+      "powershell -enc SQBFAFgAIAAoAE4AZQB3AC0ATwBiAGoAZQBjAHQA": 0.15,
+      "&('pow'+'ershell') -nop -ep bypass -c \"Write-Host test\"": 0.15,
+      "$a='powershell'; &$a -ep bypass -c \"Write-Host test\"": 0.12,
+      "wmic process call create \"powershell.exe -ep bypass -nop\"": 0.1,
+      "Start-Process powershell -WindowStyle Hidden -ArgumentList \"-ep\",\"bypass\"": 0.1
+    }
+  }
+}

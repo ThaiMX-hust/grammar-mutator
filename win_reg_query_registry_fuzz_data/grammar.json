@@ -1,0 +1,52 @@
+{
+  "rules": {
+    "<start>": "<wrapper>",
+    "<sigma_payload>": "<obf_reg> <obf_query> <obf_key>",
+    "<mitre_payload>": "<mitre_choice>"
+  },
+  "weights": {
+    "<wrapper>": {
+      "cmd.exe /c <payload>": 0.25,
+      "cmd.exe /r <payload>": 0.15,
+      "echo <payload> | cmd": 0.15,
+      "%COMSPEC% /c <payload>": 0.25,
+      "powershell -c <payload>": 0.2
+    },
+    "<payload>": {
+      "<sigma_payload>": 0.6,
+      "<mitre_payload>": 0.4
+    },
+    "<obf_reg>": {
+      "reg.exe": 0.25,
+      "REG": 0.2,
+      "\"reg.exe\"": 0.15,
+      "r^eg.exe": 0.15,
+      "reg\"\"": 0.1,
+      "%windir%\\system32\\reg.exe": 0.15
+    },
+    "<obf_query>": {
+      "query": 0.35,
+      "QUERY": 0.25,
+      "\"query\"": 0.15,
+      "q^uery": 0.15,
+      "qu\"\"ery": 0.1
+    },
+    "<obf_key>": {
+      "HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\Run": 0.2,
+      "HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\RunOnce": 0.15,
+      "HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\Winlogon": 0.15,
+      "HKLM\\System\\CurrentControlSet\\Services": 0.15,
+      "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run": 0.1,
+      "HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\Explorer\\Run": 0.1,
+      "\"HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\"": 0.08,
+      "HKLM\\Software\\Microsoft\\Windows\\Current^Version\\Run": 0.07
+    },
+    "<mitre_choice>": {
+      "powershell -c \"Get-ItemProperty HKLM:\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\"": 0.25,
+      "powershell -c \"Get-ChildItem HKLM:\\System\\CurrentControlSet\\Services\"": 0.2,
+      "wmic path win32_startupcommand get command,user": 0.2,
+      "wmic service get name,displayname,pathname,startmode": 0.2,
+      "reg query HKLM\\Software\\Microsoft\\Windows\\CurrentVersion /s": 0.15
+    }
+  }
+}

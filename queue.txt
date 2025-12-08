@@ -1,0 +1,216 @@
+cf189e2a-cdb2-4811-a76e-1be517b3432e|True|cmd|cmd.exe /r 7z^a.exe a & REM x C:\Temp\archive.zip C:\Windows\Temp\*.dump
+1653eade-8af0-4be5-9a93-4cdd17773277|True|cmd|%COMSPEC% /c 7Z.EXE a &:: C:\Temp\archive.zip C:\Windows\Temp\*.d^mp
+705225b9-483a-4402-9cef-a6a209846da9|True|cmd|cmd.exe /r 7z.exe a &:: C:\Temp\archive.zip C:\Windows\Temp\*.d^mp
+384f993e-fad8-4ec2-95e0-b52de1d8d58c|False|cmd|('cmd' + '.exe') /c 7z.exe a &:: C:\Temp\archive.zip C:\Windows\Temp\*.dump
+dda9c286-93de-44ce-afcf-67b977312c3a|True|cmd|CMD.EXE /c 7Z.EXE a &:: C:\Temp\archive.zip C:\Windows\Temp\*.dmp
+0759bc46-8808-421d-a4b3-6dd31e3450fd|False|cmd|cmd.exe /c 7z.exe a  C:\Temp\archive.zip C:\Windows\Temp\*.d^mp
+69e6b780-aee9-4d8d-a918-c98c18645554|False|cmd|cmd.exe /c 7z^a.exe a  C:\Temp\archive.zip C:\Windows\Temp\*.dump
+8ee97bf5-791e-40d6-a94f-b26789d5080d|True|cmd|%COMSPEC% /r 7Z.EXE a & REM x C:\Temp\archive.zip C:\Windows\Temp\*.d^mp
+32bec3b7-a30f-4fe7-9383-acd2200560ad|True|cmd|cmd.exe /c 7z^a.exe a & REM x C:\Temp\archive.zip C:\Windows\Temp\*.dmp
+2a578368-4222-4db5-905f-66663517ffdd|False|cmd|('cmd' + '.exe') /r 7z^a.exe a & REM x C:\Temp\archive.zip C:\Windows\Temp\*.d^mp
+0245897c-850d-41e9-bf83-6117f374bd1e|True|cmd|%COMSPEC% /c 7z.exe a &:: C:\Temp\archive.zip C:\Windows\Temp\*.dump
+bb8eb851-56c2-4af6-8e10-60b27e19de81|True|cmd|%COMSPEC% /r 7Z.EXE a & REM x C:\Temp\archive.zip C:\Windows\Temp\*.dmp
+6fbce3a9-83e2-4df3-b26c-f63fb15b5283|True|cmd|cmd.exe /r 7z^a.exe a &:: C:\Temp\archive.zip C:\Windows\Temp\*.dump
+11becadc-b330-4e31-babc-1498f791fa14|True|cmd|CMD.EXE /r 7Z.EXE a & REM x C:\Temp\archive.zip C:\Windows\Temp\*.dump
+a1aee1f9-b68c-4240-83f4-8d5a4932e7dc|True|cmd|CMD.EXE /c 7z.exe a &:: C:\Temp\archive.zip C:\Windows\Temp\*.dump
+9760a8c7-8279-4d40-9e4d-ddb34e70c5e5|True|cmd|%COMSPEC% /r 7z.exe a & REM x C:\Temp\archive.zip C:\Windows\Temp\*.dmp
+99d82cb6-d5ed-40a9-9f02-5ef22c3c8cff|True|cmd|cmd.exe /r 7z^a.exe a & REM x C:\Temp\archive.zip C:\Windows\Temp\*.dmp
+228accb7-1a3b-4a02-b4f9-576b5dea8398|False|cmd|('cmd' + '.exe') /c 7z^a.exe a & REM x C:\Temp\archive.zip C:\Windows\Temp\*.d^mp
+fef3a6af-305a-461a-a5cf-3f2abb1c66c1|False|cmd|CMD.EXE /c 7z^a.exe a  C:\Temp\archive.zip C:\Windows\Temp\*.dmp
+6cc2dec4-66d6-473c-a8d6-44a1f6f1befd|True|cmd|%COMSPEC% /c 7Z.EXE a & REM x C:\Temp\archive.zip C:\Windows\Temp\*.d^mp
+acc45d25-e6fa-424f-89dd-1fc7f3e9f0ca|True|cmd|CMD.EXE /r 7Z.EXE a & REM x C:\Temp\archive.zip C:\Windows\Temp\*.dmp
+8e7a9d80-8672-4315-aacb-a1babfa5f52f|True|cmd|cmd.exe /c 7z^a.exe a &:: C:\Temp\archive.zip C:\Windows\Temp\*.dmp
+a0d91f1b-5ebf-4ffc-bc61-b57f12c4d583|False|cmd|cmd.exe /r 7Z.EXE a  C:\Temp\archive.zip C:\Windows\Temp\*.dump
+b10a0cfb-beff-4adb-88f8-e505258082bf|False|cmd|CMD.EXE /c 7z^a.exe a  C:\Temp\archive.zip C:\Windows\Temp\*.d^mp
+5339381d-0a87-4b96-9f89-a3309c277e5a|True|cmd|cmd.exe /c 7z^a.exe a &:: C:\Temp\archive.zip C:\Windows\Temp\*.dump
+bb8aff96-d797-4dbb-97ba-4198b95ef085|True|cmd|cmd.exe /c 7z.exe a & REM x C:\Temp\archive.zip C:\Windows\Temp\*.d^mp
+4dfeb1b5-ff38-4c00-b41c-cf0f78175a72|False|cmd|('cmd' + '.exe') /r 7z.exe a & REM x C:\Temp\archive.zip C:\Windows\Temp\*.d^mp
+a5826bc9-4671-4ef8-9c44-b453edc867ca|True|cmd|CMD.EXE /r 7z.exe a &:: C:\Temp\archive.zip C:\Windows\Temp\*.dump
+b1f06408-78b1-443f-b3bc-99011bd78d3f|False|cmd|cmd.exe /r 7z^a.exe a  C:\Temp\archive.zip C:\Windows\Temp\*.dmp
+0dfddae7-053e-404e-95ea-d28bc1f58d73|False|cmd|CMD.EXE /c 7z.exe a  C:\Temp\archive.zip C:\Windows\Temp\*.dmp
+293db16b-c1b0-4acf-891d-da1a80ae79d4|False|cmd|('cmd' + '.exe') /c 7z.exe a &:: C:\Temp\archive.zip C:\Windows\Temp\*.d^mp
+a9337dda-15af-48fa-9973-6105c473025f|True|cmd|%COMSPEC% /c 7z^a.exe a &:: C:\Temp\archive.zip C:\Windows\Temp\*.dmp
+9feaa4e7-ee8c-4a0f-a2f1-65178b8c28e4|False|cmd|%COMSPEC% /c 7z^a.exe a  C:\Temp\archive.zip C:\Windows\Temp\*.d^mp
+dc863efe-3510-43c5-b4a6-fbcc7939c1da|False|cmd|%COMSPEC% /c 7z.exe a  C:\Temp\archive.zip C:\Windows\Temp\*.d^mp
+cb697422-fea4-45dd-8a84-10d14dcb02d7|False|cmd|%COMSPEC% /c 7z^a.exe a  C:\Temp\archive.zip C:\Windows\Temp\*.dmp
+248ede2c-2ba9-49aa-a543-49016e938a01|False|cmd|('cmd' + '.exe') /r 7z^a.exe a &:: C:\Temp\archive.zip C:\Windows\Temp\*.dmp
+00c378d4-7dd0-44b6-8b9a-01b537da6d98|True|cmd|%COMSPEC% /r 7z^a.exe a &:: C:\Temp\archive.zip C:\Windows\Temp\*.dmp
+7bfc7daa-8f3b-4865-b9ec-124b87522f56|False|cmd|('cmd' + '.exe') /c 7z.exe a & REM x C:\Temp\archive.zip C:\Windows\Temp\*.dump
+72d8872e-4bdd-4b66-b631-179dd4e4a94c|True|cmd|CMD.EXE /c 7z^a.exe a &:: C:\Temp\archive.zip C:\Windows\Temp\*.d^mp
+1ec1ac7f-8bd6-4156-ab08-0c9f44577f13|False|cmd|('cmd' + '.exe') /r 7Z.EXE a & REM x C:\Temp\archive.zip C:\Windows\Temp\*.d^mp
+2c9f8fe0-d16f-4672-a0fa-b31f48b27dcf|True|cmd|cmd.exe /c 7z.exe a & REM x C:\Temp\archive.zip C:\Windows\Temp\*.dmp
+3df48d3b-d639-4a12-a476-0ebc93ca8a2c|False|cmd|CMD.EXE /c 7z.exe a  C:\Temp\archive.zip C:\Windows\Temp\*.dump
+abe57ee9-8c41-42dd-b052-6aca021648e9|False|cmd|cmd.exe /c 7Z.EXE a  C:\Temp\archive.zip C:\Windows\Temp\*.dmp
+c6e94d2e-85a7-441c-841f-c9844996ee8f|False|cmd|cmd.exe /r 7Z.EXE a  C:\Temp\archive.zip C:\Windows\Temp\*.d^mp
+540fce5e-463a-42e8-bbdf-323cb0200939|True|cmd|%COMSPEC% /r 7z^a.exe a & REM x C:\Temp\archive.zip C:\Windows\Temp\*.d^mp
+262009a1-b8fd-4eda-8c78-dcccc57d4bdd|False|cmd|('cmd' + '.exe') /c 7Z.EXE a &:: C:\Temp\archive.zip C:\Windows\Temp\*.dump
+c32aa6ed-179b-4002-b20f-e86894b9caaf|True|cmd|cmd.exe /c 7z^a.exe a &:: C:\Temp\archive.zip C:\Windows\Temp\*.d^mp
+9b17aef4-9848-42e5-9729-c0316fb2fa8d|True|cmd|cmd.exe /r 7z.exe a & REM x C:\Temp\archive.zip C:\Windows\Temp\*.d^mp
+1407eb02-e4ef-4483-873d-e2e0fbaaf57d|False|cmd|cmd.exe /r 7z^a.exe a  C:\Temp\archive.zip C:\Windows\Temp\*.d^mp
+d94365f4-383a-495d-b2c4-b14fe62d4ce2|False|cmd|('cmd' + '.exe') /c 7z^a.exe a  C:\Temp\archive.zip C:\Windows\Temp\*.dmp
+f719cdef-c133-40e3-b28c-18fedd008ef5|True|cmd|CMD.EXE /r 7Z.EXE a &:: C:\Temp\archive.zip C:\Windows\Temp\*.dmp
+38444e3f-8c94-4038-87ef-ac390a27a016|True|cmd|%COMSPEC% /r 7z.exe a &:: C:\Temp\archive.zip C:\Windows\Temp\*.d^mp
+34a70cca-ce02-41e9-a6fa-871732ba967e|False|cmd|('cmd' + '.exe') /c 7z.exe a  C:\Temp\archive.zip C:\Windows\Temp\*.dump
+806fa0e9-945c-439d-a02e-32335e1079be|False|cmd|('cmd' + '.exe') /c 7z^a.exe a &:: C:\Temp\archive.zip C:\Windows\Temp\*.dmp
+5b9ecd58-45a2-4746-9606-2f1c592a3e3e|True|cmd|CMD.EXE /c 7z^a.exe a & REM x C:\Temp\archive.zip C:\Windows\Temp\*.d^mp
+31ae5304-9d8b-4b62-929b-6e394f5033c2|False|cmd|('cmd' + '.exe') /c 7z.exe a & REM x C:\Temp\archive.zip C:\Windows\Temp\*.d^mp
+0a6445a0-f562-4c86-bdd9-54554b438e62|False|cmd|%COMSPEC% /c 7Z.EXE a  C:\Temp\archive.zip C:\Windows\Temp\*.dump
+8a08a85b-3362-45e3-81b7-7e5af0717304|False|cmd|('cmd' + '.exe') /c 7Z.EXE a &:: C:\Temp\archive.zip C:\Windows\Temp\*.dmp
+0f2d3e42-a50a-4575-90d5-871d6c6ace3d|True|cmd|cmd.exe /c 7z.exe a &:: C:\Temp\archive.zip C:\Windows\Temp\*.dmp
+1eb6b9bb-aa38-4520-8312-23754bf1faf1|True|cmd|CMD.EXE /c 7z^a.exe a & REM x C:\Temp\archive.zip C:\Windows\Temp\*.dump
+8c7356ee-f628-4d49-92b7-13c992a95305|True|cmd|cmd.exe /c 7Z.EXE a & REM x C:\Temp\archive.zip C:\Windows\Temp\*.d^mp
+44698da5-b1e3-4f62-961e-a3973078c73c|False|cmd|%COMSPEC% /r 7z.exe a  C:\Temp\archive.zip C:\Windows\Temp\*.dump
+e1f19350-1c28-4142-a271-18f9c201251d|False|cmd|%COMSPEC% /c 7z.exe a  C:\Temp\archive.zip C:\Windows\Temp\*.dmp
+d38c59bd-a9b2-4fe4-8c9e-e2f1ed960d79|True|cmd|cmd.exe /r 7Z.EXE a &:: C:\Temp\archive.zip C:\Windows\Temp\*.d^mp
+f913bd6b-b32b-48d6-a13f-cb4485a8656c|True|cmd|%COMSPEC% /c 7Z.EXE a & REM x C:\Temp\archive.zip C:\Windows\Temp\*.dmp
+07d6eef7-3346-4341-ba87-664aefe836da|True|cmd|cmd.exe /c 7z.exe a & REM x C:\Temp\archive.zip C:\Windows\Temp\*.dump
+8f39e1b6-eafb-44f7-bf00-a7a8ede5fde1|False|cmd|%COMSPEC% /c 7Z.EXE a  C:\Temp\archive.zip C:\Windows\Temp\*.dmp
+6feeb0fe-95bc-4d3a-acf5-3ac3ba51fba5|False|cmd|cmd.exe /c 7z.exe a  C:\Temp\archive.zip C:\Windows\Temp\*.dump
+5d5a8716-009f-40a0-946e-8dd716e78138|False|cmd|cmd.exe /c 7z^a.exe a  C:\Temp\archive.zip C:\Windows\Temp\*.d^mp
+8ce4a8d6-70a6-4881-a7b0-952179665371|True|cmd|CMD.EXE /r 7z^a.exe a &:: C:\Temp\archive.zip C:\Windows\Temp\*.dmp
+e22203fe-85af-4394-8ba6-ed122c7f1787|True|cmd|%COMSPEC% /r 7z^a.exe a & REM x C:\Temp\archive.zip C:\Windows\Temp\*.dmp
+d69d156d-8ee9-440f-b980-2a1bd2774b4d|True|cmd|CMD.EXE /r 7Z.EXE a & REM x C:\Temp\archive.zip C:\Windows\Temp\*.d^mp
+122f1f22-b0f3-4062-9300-0468fa926bd3|False|cmd|('cmd' + '.exe') /r 7z^a.exe a  C:\Temp\archive.zip C:\Windows\Temp\*.d^mp
+d4fc2824-9f8f-4dd1-9265-6432781c0517|True|cmd|%COMSPEC% /c 7z^a.exe a &:: C:\Temp\archive.zip C:\Windows\Temp\*.d^mp
+0497968b-2828-4a32-b004-974cfd152ca6|True|cmd|CMD.EXE /c 7Z.EXE a & REM x C:\Temp\archive.zip C:\Windows\Temp\*.dmp
+0bc7d272-84e9-4e96-a19e-88ec28feaea9|False|cmd|('cmd' + '.exe') /r 7Z.EXE a &:: C:\Temp\archive.zip C:\Windows\Temp\*.d^mp
+50d40c2b-31ed-497d-a08b-676f25dd75bd|False|cmd|CMD.EXE /c 7Z.EXE a  C:\Temp\archive.zip C:\Windows\Temp\*.dump
+669128db-c686-4ef6-be6a-a63b396e878d|False|cmd|%COMSPEC% /c 7Z.EXE a  C:\Temp\archive.zip C:\Windows\Temp\*.d^mp
+4d466af2-47dc-4fbe-b216-5a679cbb5033|True|cmd|CMD.EXE /r 7z^a.exe a & REM x C:\Temp\archive.zip C:\Windows\Temp\*.dump
+bd37f2f4-d68c-41d0-bfc7-7e6ff07e5218|True|cmd|%COMSPEC% /r 7z^a.exe a &:: C:\Temp\archive.zip C:\Windows\Temp\*.dump
+4b26273e-951a-409d-a9a1-bed6407b59e6|True|cmd|CMD.EXE /c 7z^a.exe a &:: C:\Temp\archive.zip C:\Windows\Temp\*.dump
+f7fdae6a-31bf-4fe3-9a05-7cd0619fdadd|False|cmd|%COMSPEC% /r 7z.exe a  C:\Temp\archive.zip C:\Windows\Temp\*.dmp
+a8488e46-3761-48ec-bd00-a6133b57ed49|False|cmd|('cmd' + '.exe') /c 7Z.EXE a & REM x C:\Temp\archive.zip C:\Windows\Temp\*.d^mp
+3c1682c6-bc5e-4f2a-b3a5-033976de2567|True|cmd|%COMSPEC% /c 7z.exe a &:: C:\Temp\archive.zip C:\Windows\Temp\*.d^mp
+7314fb7c-1e4f-4111-b7b5-bfb82b9fd50c|True|cmd|CMD.EXE /r 7z^a.exe a & REM x C:\Temp\archive.zip C:\Windows\Temp\*.dmp
+3985a497-1cf7-4a0b-9ce6-55d7992b037f|False|cmd|('cmd' + '.exe') /r 7Z.EXE a  C:\Temp\archive.zip C:\Windows\Temp\*.dmp
+f47a91e4-d0a0-470f-9f15-3906877d45c1|False|cmd|('cmd' + '.exe') /c 7Z.EXE a & REM x C:\Temp\archive.zip C:\Windows\Temp\*.dump
+ae65b8d0-76a0-4cbe-998a-683a16111b09|True|cmd|cmd.exe /r 7Z.EXE a & REM x C:\Temp\archive.zip C:\Windows\Temp\*.d^mp
+b4de76f1-d190-4fc1-abfe-58d794053ca5|True|cmd|cmd.exe /r 7z.exe a & REM x C:\Temp\archive.zip C:\Windows\Temp\*.dmp
+1c4a80e6-1652-42f8-b158-20d2eef490c3|True|cmd|%COMSPEC% /r 7z.exe a & REM x C:\Temp\archive.zip C:\Windows\Temp\*.d^mp
+1c252fa8-679f-42d1-be3d-f3fa9f24f33b|True|cmd|cmd.exe /r 7z^a.exe a & REM x C:\Temp\archive.zip C:\Windows\Temp\*.d^mp
+926a8a0f-c045-4518-bda4-e77ec2487488|False|cmd|CMD.EXE /c 7Z.EXE a  C:\Temp\archive.zip C:\Windows\Temp\*.dmp
+bdd91c70-dcc6-4d31-bda4-571542715cbd|True|cmd|cmd.exe /c 7z^a.exe a & REM x C:\Temp\archive.zip C:\Windows\Temp\*.dump
+5c55215c-3bc6-47ac-9b4c-e38737ff7687|False|cmd|%COMSPEC% /r 7Z.EXE a  C:\Temp\archive.zip C:\Windows\Temp\*.d^mp
+4728736d-8e85-45c1-a92a-c2e551cd700d|True|cmd|CMD.EXE /r 7z.exe a &:: C:\Temp\archive.zip C:\Windows\Temp\*.dmp
+83b0ad9f-7c66-4932-befb-64657003a6cb|True|cmd|%COMSPEC% /c 7z^a.exe a &:: C:\Temp\archive.zip C:\Windows\Temp\*.dump
+740f5a06-5b74-484a-984d-b3b3932c785a|True|cmd|%COMSPEC% /r 7Z.EXE a &:: C:\Temp\archive.zip C:\Windows\Temp\*.dump
+837ba4a1-ba80-426e-8aab-022958ad15ee|False|cmd|('cmd' + '.exe') /r 7z.exe a &:: C:\Temp\archive.zip C:\Windows\Temp\*.dump
+5ded411c-cbff-48c7-9c3f-1cadd911c02a|True|cmd|CMD.EXE /r 7z.exe a & REM x C:\Temp\archive.zip C:\Windows\Temp\*.d^mp
+844fdaea-5c03-4c81-bb2f-f3b9d0195ea8|False|cmd|('cmd' + '.exe') /r 7z.exe a &:: C:\Temp\archive.zip C:\Windows\Temp\*.d^mp
+dd1a018e-ecf1-4db5-8c68-6d413c649955|True|cmd|%COMSPEC% /c 7Z.EXE a & REM x C:\Temp\archive.zip C:\Windows\Temp\*.dump
+caee4734-2f6a-46fa-83f7-c49564276dc4|False|cmd|cmd.exe /r 7z^a.exe a  C:\Temp\archive.zip C:\Windows\Temp\*.dump
+36d89939-0114-4a1e-b601-49a99348d0a8|False|cmd|%COMSPEC% /r 7Z.EXE a  C:\Temp\archive.zip C:\Windows\Temp\*.dmp
+74ac1b79-dee4-4d1d-a517-5c41feb59999|True|cmd|%COMSPEC% /c 7z.exe a &:: C:\Temp\archive.zip C:\Windows\Temp\*.dmp
+5460082d-2da7-43ca-b606-5cb8161e653e|True|cmd|%COMSPEC% /c 7z.exe a & REM x C:\Temp\archive.zip C:\Windows\Temp\*.dump
+d71cbbe8-14a1-4369-a3df-ec49725bb320|True|cmd|%COMSPEC% /r 7z^a.exe a & REM x C:\Temp\archive.zip C:\Windows\Temp\*.dump
+b2517c1b-a02d-4c7d-9247-b6cf7cb1e045|False|cmd|('cmd' + '.exe') /c 7z.exe a  C:\Temp\archive.zip C:\Windows\Temp\*.dmp
+61400042-57ff-4ce2-9d6c-b47d850aaf36|True|cmd|%COMSPEC% /r 7z.exe a &:: C:\Temp\archive.zip C:\Windows\Temp\*.dump
+2e9a28fe-0ca2-4f61-b4e9-1a0303b62859|True|cmd|%COMSPEC% /r 7z.exe a &:: C:\Temp\archive.zip C:\Windows\Temp\*.dmp
+c44bee12-b0a6-4404-8e45-c2a12390a97d|True|cmd|CMD.EXE /r 7z^a.exe a &:: C:\Temp\archive.zip C:\Windows\Temp\*.d^mp
+3981252a-55b1-4869-8989-cc9d624f48ef|True|cmd|CMD.EXE /r 7z.exe a & REM x C:\Temp\archive.zip C:\Windows\Temp\*.dump
+030b6b69-03cb-4125-b13e-ec27726066fb|False|cmd|CMD.EXE /r 7Z.EXE a  C:\Temp\archive.zip C:\Windows\Temp\*.dump
+80dd3110-eb54-4e02-afdc-f1b9cc39327e|True|cmd|CMD.EXE /r 7Z.EXE a &:: C:\Temp\archive.zip C:\Windows\Temp\*.dump
+7314ec21-16a0-4275-89d2-826874596689|False|cmd|CMD.EXE /r 7Z.EXE a  C:\Temp\archive.zip C:\Windows\Temp\*.dmp
+eb924276-1f9d-41c4-be31-2375fe56d841|True|cmd|CMD.EXE /c 7Z.EXE a & REM x C:\Temp\archive.zip C:\Windows\Temp\*.d^mp
+900c6f63-20a8-4100-9add-2ed701dcb807|True|cmd|CMD.EXE /r 7z.exe a &:: C:\Temp\archive.zip C:\Windows\Temp\*.d^mp
+67ada1ce-4231-4076-82eb-00d2561891eb|False|cmd|CMD.EXE /r 7z.exe a  C:\Temp\archive.zip C:\Windows\Temp\*.dmp
+8ba997de-10be-4e77-b1ff-1f10a5a77a08|False|cmd|CMD.EXE /c 7z^a.exe a  C:\Temp\archive.zip C:\Windows\Temp\*.dump
+41fe97f0-adf1-4c96-af1b-8f1bd131f2dc|True|cmd|%COMSPEC% /r 7Z.EXE a & REM x C:\Temp\archive.zip C:\Windows\Temp\*.dump
+d1af4617-be19-4913-8141-36f7d65ae06d|False|cmd|('cmd' + '.exe') /r 7z.exe a  C:\Temp\archive.zip C:\Windows\Temp\*.dump
+6b20466d-89e4-4724-a44f-23b9bde0b8f5|False|cmd|('cmd' + '.exe') /c 7Z.EXE a  C:\Temp\archive.zip C:\Windows\Temp\*.d^mp
+6d1950bb-eaba-4de0-9157-2e4a4daf6569|False|cmd|('cmd' + '.exe') /r 7z^a.exe a  C:\Temp\archive.zip C:\Windows\Temp\*.dmp
+1d7a32c4-170d-4a36-8771-62ec7f1ceb09|True|cmd|CMD.EXE /c 7z.exe a & REM x C:\Temp\archive.zip C:\Windows\Temp\*.dmp
+ec7f3648-8c33-40f8-9b2b-244fe7c380ae|True|cmd|CMD.EXE /c 7Z.EXE a &:: C:\Temp\archive.zip C:\Windows\Temp\*.dump
+f745673e-5f9f-42e3-b504-02041370766d|True|cmd|cmd.exe /r 7z.exe a & REM x C:\Temp\archive.zip C:\Windows\Temp\*.dump
+b9318ec5-cad9-4add-9fcd-3a2af848e53f|False|cmd|%COMSPEC% /r 7z^a.exe a  C:\Temp\archive.zip C:\Windows\Temp\*.d^mp
+1836a5c5-d30c-462f-8c53-6d70a90a9cbd|True|cmd|CMD.EXE /c 7z^a.exe a & REM x C:\Temp\archive.zip C:\Windows\Temp\*.dmp
+59374251-dcd3-4503-b035-9a13fa8041b4|False|cmd|%COMSPEC% /r 7z^a.exe a  C:\Temp\archive.zip C:\Windows\Temp\*.dmp
+2ffec871-eccd-4954-956c-1833411ad0b8|True|cmd|cmd.exe /c 7Z.EXE a & REM x C:\Temp\archive.zip C:\Windows\Temp\*.dmp
+cd46934e-6e76-4089-bb24-be26dafe7354|False|cmd|('cmd' + '.exe') /r 7z^a.exe a &:: C:\Temp\archive.zip C:\Windows\Temp\*.d^mp
+a0f7fce5-caaf-49d1-931e-b63bd2db4e85|False|cmd|cmd.exe /r 7Z.EXE a  C:\Temp\archive.zip C:\Windows\Temp\*.dmp
+a466637c-2dae-43d5-ab90-4368c56ea333|True|cmd|cmd.exe /c 7Z.EXE a &:: C:\Temp\archive.zip C:\Windows\Temp\*.dmp
+c24bb6a1-ae95-4243-8207-4f07c2a0c843|True|cmd|CMD.EXE /r 7z^a.exe a & REM x C:\Temp\archive.zip C:\Windows\Temp\*.d^mp
+59a6cf8d-8e5d-4bb6-bbb1-7b2bcd8bf66b|False|cmd|CMD.EXE /r 7Z.EXE a  C:\Temp\archive.zip C:\Windows\Temp\*.d^mp
+b9f78aac-6445-4efe-b415-63355d0fa085|True|cmd|%COMSPEC% /c 7z^a.exe a & REM x C:\Temp\archive.zip C:\Windows\Temp\*.d^mp
+c097f917-d55f-4ffa-a9be-00a086958db3|False|cmd|('cmd' + '.exe') /c 7z.exe a & REM x C:\Temp\archive.zip C:\Windows\Temp\*.dmp
+4dd36daf-ea55-4764-8afb-39104ca6f1ce|True|cmd|cmd.exe /r 7Z.EXE a & REM x C:\Temp\archive.zip C:\Windows\Temp\*.dump
+3caac254-ad08-4cce-94b1-86da42bfb8df|True|cmd|cmd.exe /r 7Z.EXE a &:: C:\Temp\archive.zip C:\Windows\Temp\*.dmp
+02ed42ee-1e40-420e-ab97-ddd7bebf55f1|True|cmd|cmd.exe /c 7z.exe a &:: C:\Temp\archive.zip C:\Windows\Temp\*.d^mp
+6db3e5cc-81a2-4e1e-ad5b-84a273c9ddb7|True|cmd|cmd.exe /c 7Z.EXE a & REM x C:\Temp\archive.zip C:\Windows\Temp\*.dump
+09666341-b3a4-470b-aedd-244ec323836b|False|cmd|('cmd' + '.exe') /c 7z.exe a  C:\Temp\archive.zip C:\Windows\Temp\*.d^mp
+d6775d65-6c3a-4609-874d-4f487e00f535|False|cmd|('cmd' + '.exe') /c 7z^a.exe a  C:\Temp\archive.zip C:\Windows\Temp\*.dump
+023b4e1b-83fc-4e32-a7a3-a7bbdafb1a68|False|cmd|('cmd' + '.exe') /c 7z^a.exe a & REM x C:\Temp\archive.zip C:\Windows\Temp\*.dmp
+4ac63e74-4eb1-4ab4-ac63-d89b90d65164|True|cmd|CMD.EXE /c 7z.exe a & REM x C:\Temp\archive.zip C:\Windows\Temp\*.d^mp
+85867ce1-3ce9-4548-becc-1432e7fc8c2f|True|cmd|cmd.exe /c 7z^a.exe a & REM x C:\Temp\archive.zip C:\Windows\Temp\*.d^mp
+d566bfed-bccf-4715-b705-d099713551e9|True|cmd|%COMSPEC% /r 7z^a.exe a &:: C:\Temp\archive.zip C:\Windows\Temp\*.d^mp
+7c8293f7-116d-4f43-b1f2-d207aaca7bf6|True|cmd|%COMSPEC% /r 7z.exe a & REM x C:\Temp\archive.zip C:\Windows\Temp\*.dump
+6cbc385d-0908-427c-9b28-0ed8e8417203|True|cmd|CMD.EXE /c 7z^a.exe a &:: C:\Temp\archive.zip C:\Windows\Temp\*.dmp
+0ca34d45-14d6-4d4c-8619-fe8434df64ac|False|cmd|cmd.exe /c 7z.exe a  C:\Temp\archive.zip C:\Windows\Temp\*.dmp
+b8f0c038-61f6-4404-ac74-1157ecb875e6|False|cmd|cmd.exe /c 7Z.EXE a  C:\Temp\archive.zip C:\Windows\Temp\*.d^mp
+e8bb9ab1-17d4-4feb-84cc-499b1f1a411f|True|cmd|%COMSPEC% /c 7Z.EXE a &:: C:\Temp\archive.zip C:\Windows\Temp\*.dump
+9e92075c-f3b9-4d36-ad1c-be29ce51e52c|False|cmd|('cmd' + '.exe') /c 7Z.EXE a  C:\Temp\archive.zip C:\Windows\Temp\*.dump
+1ad5e7d7-db78-4080-98e7-b15ae9c96556|False|cmd|CMD.EXE /r 7z.exe a  C:\Temp\archive.zip C:\Windows\Temp\*.d^mp
+51f807ed-78be-4e81-9742-525f5a68fc71|False|cmd|('cmd' + '.exe') /r 7Z.EXE a & REM x C:\Temp\archive.zip C:\Windows\Temp\*.dmp
+7fa9fb85-111e-4846-9269-b5e94b446059|True|cmd|cmd.exe /r 7z.exe a &:: C:\Temp\archive.zip C:\Windows\Temp\*.dump
+ccc1a11e-57fe-4d1e-857e-1f3165fb291c|False|cmd|('cmd' + '.exe') /c 7z^a.exe a & REM x C:\Temp\archive.zip C:\Windows\Temp\*.dump
+bc52c0e9-3b0d-4083-8e9c-64cb05ca285a|False|cmd|CMD.EXE /c 7Z.EXE a  C:\Temp\archive.zip C:\Windows\Temp\*.d^mp
+a0192920-7610-4f2f-b4ac-60e6040a13f0|False|cmd|('cmd' + '.exe') /r 7z.exe a & REM x C:\Temp\archive.zip C:\Windows\Temp\*.dmp
+b123d288-5b6e-41bf-a6b2-eb75eff34284|True|cmd|CMD.EXE /c 7z.exe a &:: C:\Temp\archive.zip C:\Windows\Temp\*.d^mp
+83772fa2-b8f0-46a5-9a69-2aabeeb1b88f|True|cmd|cmd.exe /r 7Z.EXE a &:: C:\Temp\archive.zip C:\Windows\Temp\*.dump
+8d02cb8f-1ad6-430e-ae80-045be8d7afbc|True|cmd|cmd.exe /c 7z.exe a &:: C:\Temp\archive.zip C:\Windows\Temp\*.dump
+6dfc7f15-66f0-4135-82c5-d313bdc42581|False|cmd|%COMSPEC% /c 7z^a.exe a  C:\Temp\archive.zip C:\Windows\Temp\*.dump
+cb88033b-34dd-4d00-b07a-6fa3bface9d8|True|cmd|CMD.EXE /c 7z.exe a & REM x C:\Temp\archive.zip C:\Windows\Temp\*.dump
+f529e900-a82e-4ae0-bc52-32fdb73672e0|False|cmd|('cmd' + '.exe') /c 7z^a.exe a  C:\Temp\archive.zip C:\Windows\Temp\*.d^mp
+0a0fabb3-4e3b-4b95-b547-374b24e62637|True|cmd|cmd.exe /c 7Z.EXE a &:: C:\Temp\archive.zip C:\Windows\Temp\*.dump
+491a1ace-4b9d-463e-b73c-ada024455660|False|cmd|('cmd' + '.exe') /r 7Z.EXE a & REM x C:\Temp\archive.zip C:\Windows\Temp\*.dump
+c6b5f63d-0564-41f9-b9e8-c0d88bea0d50|False|cmd|CMD.EXE /r 7z^a.exe a  C:\Temp\archive.zip C:\Windows\Temp\*.dmp
+6bc0e421-8057-4415-9d25-9bae662377f1|False|cmd|('cmd' + '.exe') /r 7Z.EXE a &:: C:\Temp\archive.zip C:\Windows\Temp\*.dmp
+e5d095f3-e4d4-49f0-b1b1-362f81093d04|True|cmd|CMD.EXE /r 7z^a.exe a &:: C:\Temp\archive.zip C:\Windows\Temp\*.dump
+555c5ddd-c2c6-4e9b-bd1f-10294ca5304e|False|cmd|CMD.EXE /r 7z.exe a  C:\Temp\archive.zip C:\Windows\Temp\*.dump
+5d427159-bd9e-4095-9859-77b194e9b1f6|False|cmd|%COMSPEC% /c 7z.exe a  C:\Temp\archive.zip C:\Windows\Temp\*.dump
+83655b0c-3806-44b4-9134-94dc8d958569|False|cmd|('cmd' + '.exe') /c 7Z.EXE a & REM x C:\Temp\archive.zip C:\Windows\Temp\*.dmp
+d22bd0e3-b4e9-4f38-b811-18ac2ab216f1|False|cmd|cmd.exe /c 7Z.EXE a  C:\Temp\archive.zip C:\Windows\Temp\*.dump
+26235f6f-5cc6-4276-9b80-0e186fb6e1f2|False|cmd|('cmd' + '.exe') /r 7z.exe a  C:\Temp\archive.zip C:\Windows\Temp\*.d^mp
+d2a625a9-fa71-4309-b9ac-5d67c0851907|False|cmd|('cmd' + '.exe') /r 7z.exe a  C:\Temp\archive.zip C:\Windows\Temp\*.dmp
+0d0a7efa-22f5-4eea-9b43-56b2f2603c3f|False|cmd|cmd.exe /c 7z^a.exe a  C:\Temp\archive.zip C:\Windows\Temp\*.dmp
+17231907-8e37-4888-900d-8c6549dd28e8|True|cmd|cmd.exe /r 7z^a.exe a &:: C:\Temp\archive.zip C:\Windows\Temp\*.dmp
+27451714-a13c-469c-9733-87bd36bb5be9|False|cmd|%COMSPEC% /r 7Z.EXE a  C:\Temp\archive.zip C:\Windows\Temp\*.dump
+d9cf0b1c-c324-4768-bd7e-1171079fcc7a|True|cmd|%COMSPEC% /c 7z.exe a & REM x C:\Temp\archive.zip C:\Windows\Temp\*.dmp
+7d5d62aa-9132-40d1-abe4-f67f2635b1b4|True|cmd|%COMSPEC% /r 7Z.EXE a &:: C:\Temp\archive.zip C:\Windows\Temp\*.dmp
+b638d9f3-2984-4319-9773-06d2324b27bf|False|cmd|('cmd' + '.exe') /c 7z^a.exe a &:: C:\Temp\archive.zip C:\Windows\Temp\*.d^mp
+a69be1ba-a314-415b-aaaf-11376c240ba7|False|cmd|cmd.exe /r 7z.exe a  C:\Temp\archive.zip C:\Windows\Temp\*.dmp
+d592abb3-c80b-4b33-81de-ad44034c07e8|False|cmd|CMD.EXE /c 7z.exe a  C:\Temp\archive.zip C:\Windows\Temp\*.d^mp
+fa566d4f-d4c2-4998-9d84-8f1e66d3601f|True|cmd|%COMSPEC% /c 7Z.EXE a &:: C:\Temp\archive.zip C:\Windows\Temp\*.dmp
+f07cc6f3-880f-46ed-8d47-387a590e3efd|False|cmd|('cmd' + '.exe') /r 7Z.EXE a  C:\Temp\archive.zip C:\Windows\Temp\*.d^mp
+b0e18b9a-ff0e-4a30-9b1a-dbdd3ae27945|False|cmd|cmd.exe /r 7z.exe a  C:\Temp\archive.zip C:\Windows\Temp\*.dump
+61cc4999-7697-40ee-9c6b-f7d2ab19c4f1|True|cmd|CMD.EXE /r 7z.exe a & REM x C:\Temp\archive.zip C:\Windows\Temp\*.dmp
+f13d5d77-cb0e-4051-aa6a-1f68db27e7b8|True|cmd|CMD.EXE /r 7Z.EXE a &:: C:\Temp\archive.zip C:\Windows\Temp\*.d^mp
+a2b12213-5d7e-4151-9ffb-06e8c7eef53b|True|cmd|cmd.exe /r 7z^a.exe a &:: C:\Temp\archive.zip C:\Windows\Temp\*.d^mp
+724ebf10-025c-4ac7-ace5-732da6b733ff|False|cmd|('cmd' + '.exe') /r 7z^a.exe a  C:\Temp\archive.zip C:\Windows\Temp\*.dump
+6c3ed463-fce0-46d0-ad87-8367b951732f|True|cmd|%COMSPEC% /c 7z^a.exe a & REM x C:\Temp\archive.zip C:\Windows\Temp\*.dump
+8dcbb3fe-684a-4f88-9e14-ab6e103c518d|True|cmd|CMD.EXE /c 7Z.EXE a & REM x C:\Temp\archive.zip C:\Windows\Temp\*.dump
+b0b20cab-7b72-4ece-890e-68194f08bb7c|True|cmd|cmd.exe /r 7Z.EXE a & REM x C:\Temp\archive.zip C:\Windows\Temp\*.dmp
+ed235384-afac-401c-ad29-94630c5a1ba0|False|cmd|CMD.EXE /r 7z^a.exe a  C:\Temp\archive.zip C:\Windows\Temp\*.d^mp
+469da7f3-9bb4-415e-b7a3-5ce782dc23b3|False|cmd|('cmd' + '.exe') /r 7z^a.exe a & REM x C:\Temp\archive.zip C:\Windows\Temp\*.dmp
+6098ce82-7bfb-4d30-ae13-f94ce1ea6476|False|cmd|('cmd' + '.exe') /r 7Z.EXE a &:: C:\Temp\archive.zip C:\Windows\Temp\*.dump
+c65e7d13-389f-446d-a832-edd50d40b3dd|True|cmd|%COMSPEC% /r 7Z.EXE a &:: C:\Temp\archive.zip C:\Windows\Temp\*.d^mp
+4e1e858a-2554-42b7-bfc8-c95ef77c2485|False|cmd|('cmd' + '.exe') /r 7z.exe a & REM x C:\Temp\archive.zip C:\Windows\Temp\*.dump
+79f4542f-09e6-47d3-b7c3-ea0e88e985ed|False|cmd|('cmd' + '.exe') /c 7Z.EXE a &:: C:\Temp\archive.zip C:\Windows\Temp\*.d^mp
+4dfb8e99-cda8-4b2e-a5d9-42490a0aa59a|False|cmd|('cmd' + '.exe') /r 7z^a.exe a &:: C:\Temp\archive.zip C:\Windows\Temp\*.dump
+0ac38f98-5d6b-4953-8e70-3101cb335d8a|False|cmd|('cmd' + '.exe') /r 7z^a.exe a & REM x C:\Temp\archive.zip C:\Windows\Temp\*.dump
+06c71ee3-6e2c-4ff5-a703-9a8a9df0b211|False|cmd|('cmd' + '.exe') /r 7Z.EXE a  C:\Temp\archive.zip C:\Windows\Temp\*.dump
+d0ff98f1-c0b4-44d1-9833-07e73ad182fe|True|cmd|%COMSPEC% /c 7z.exe a & REM x C:\Temp\archive.zip C:\Windows\Temp\*.d^mp
+52ce4373-0834-433d-a76b-b192cdbbfcdd|True|cmd|CMD.EXE /c 7Z.EXE a &:: C:\Temp\archive.zip C:\Windows\Temp\*.d^mp
+088e3926-8c5b-468a-badf-040f9c6f39ff|True|cmd|cmd.exe /r 7z.exe a &:: C:\Temp\archive.zip C:\Windows\Temp\*.dmp
+08501285-fd1e-4f6d-9f59-80bf5bdeecb4|True|cmd|%COMSPEC% /c 7z^a.exe a & REM x C:\Temp\archive.zip C:\Windows\Temp\*.dmp
+0b76b7fe-af84-4a6c-9dae-3f35a6540d1c|False|cmd|%COMSPEC% /r 7z^a.exe a  C:\Temp\archive.zip C:\Windows\Temp\*.dump
+2f3c666b-1e59-4af9-a0ae-d9d1407888cc|True|cmd|cmd.exe /c 7Z.EXE a &:: C:\Temp\archive.zip C:\Windows\Temp\*.d^mp
+6a0d218f-30ee-41d0-8a2b-1d9e21bc701f|False|cmd|('cmd' + '.exe') /c 7z.exe a &:: C:\Temp\archive.zip C:\Windows\Temp\*.dmp
+6b252482-59ad-4b80-8e88-d09c40e2406b|False|cmd|('cmd' + '.exe') /c 7Z.EXE a  C:\Temp\archive.zip C:\Windows\Temp\*.dmp
+f9f325e7-4d30-4e4c-a027-a3226d3a333e|False|cmd|('cmd' + '.exe') /c 7z^a.exe a &:: C:\Temp\archive.zip C:\Windows\Temp\*.dump
+c9d6af36-8c19-4b3e-855b-d92328301e0c|True|cmd|CMD.EXE /c 7z.exe a &:: C:\Temp\archive.zip C:\Windows\Temp\*.dmp
+99def19a-dcd4-4824-9401-9c54d9e7e318|False|cmd|('cmd' + '.exe') /r 7z.exe a &:: C:\Temp\archive.zip C:\Windows\Temp\*.dmp
+82bca8fe-fc78-4b33-af15-d59999fcf873|False|cmd|cmd.exe /r 7z.exe a  C:\Temp\archive.zip C:\Windows\Temp\*.d^mp
+ef64f685-fe3d-4427-9a62-faa702e3af91|False|cmd|CMD.EXE /r 7z^a.exe a  C:\Temp\archive.zip C:\Windows\Temp\*.dump
+818440e1-4552-49e6-9114-d2142368ca31|False|cmd|%COMSPEC% /r 7z.exe a  C:\Temp\archive.zip C:\Windows\Temp\*.d^mp

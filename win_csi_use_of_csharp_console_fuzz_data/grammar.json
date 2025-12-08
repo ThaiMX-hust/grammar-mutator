@@ -1,0 +1,47 @@
+{
+  "rules": {
+    "<start>": "<wrapper>",
+    "<sigma_payload>": "<obf_parent_command> <obf_cli_switch> \"<obf_csi_executable>\"",
+    "<mitre_payload>": "<mitre_choice>"
+  },
+  "weights": {
+    "<wrapper>": {
+      "cmd.exe /c <payload>": 0.2,
+      "cmd.exe /r <payload>": 0.2,
+      "echo <payload> | cmd": 0.2,
+      "%COMSPEC% /c <payload>": 0.2,
+      "<payload>": 0.2
+    },
+    "<payload>": {
+      "<sigma_payload>": 0.6,
+      "<mitre_payload>": 0.4
+    },
+    "<obf_csi_executable>": {
+      "csi.exe": 0.2,
+      "csi": 0.2,
+      "\"csi.exe\"": 0.1,
+      "c^si.exe": 0.1,
+      "csi.e\"\"xe": 0.1,
+      "%ProgramFiles(x86)%\\MSBuild\\14.0\\Bin\\csi.exe": 0.15,
+      "%ProgramFiles%\\Microsoft Visual Studio\\2022\\Community\\MSBuild\\Current\\Bin\\Roslyn\\csi.exe": 0.15
+    },
+    "<obf_parent_command>": {
+      "powershell.exe": 0.3,
+      "pwsh.exe": 0.3,
+      "powershell_ise.exe": 0.2,
+      "power^shell.exe": 0.1,
+      "\"pwsh.exe\"": 0.1
+    },
+    "<obf_cli_switch>": {
+      "-c": 0.5,
+      "-Command": 0.3,
+      "/c": 0.2
+    },
+    "<mitre_choice>": {
+      "csc.exe /target:library /out:test.dll test.cs": 0.25,
+      "jsc.exe /t:library test.js": 0.25,
+      "C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\InstallUtil.exe /logfile= /LogToConsole=false /U test.exe": 0.25,
+      "MSBuild.exe test.csproj": 0.25
+    }
+  }
+}

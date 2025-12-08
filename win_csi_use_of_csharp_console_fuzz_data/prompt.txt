@@ -1,0 +1,79 @@
+
+Bạn là chuyên gia tạo grammar JSON cho fuzzer. Hãy tạo file grammar ĐÚNG CẤU TRÚC sau:
+
+=== RULE NAME ===
+win_csi_use_of_csharp_console
+
+=== SIGMA DETECTION ===
+
+detection:
+    selection:
+        Image|endswith: '\csi.exe'
+        ParentImage|endswith:
+            - '\powershell.exe'
+            - '\pwsh.exe'
+            - '\powershell_ise.exe'
+        OriginalFileName: 'csi.exe'
+    condition: selection
+
+
+=== EXTRACTED KEYWORDS ===
+\csi.exe, \powershell.exe, \pwsh.exe, \powershell_ise.exe, csi.exe
+
+=== MITRE ATT&CK TECHNIQUES ===
+...
+
+=== CẤU TRÚC GRAMMAR YÊU CẦU ===
+
+**QUAN TRỌNG:** Tránh vòng lặp vô hạn!
+
+```json
+{
+  "rules": {
+    "<start>": "<wrapper>",
+    "<sigma_payload>": "<obf__csi_exe> <obf__powershell_exe> <obf__pwsh_exe> <obf__powershell_ise_exe> <obf_csi_exe>",
+    "<mitre_payload>": "<mitre_choice>"
+  },
+  "weights": {
+    "<wrapper>": {
+      "cmd.exe /c <payload>": 0.2,
+      "echo <payload> | cmd": 0.2,
+      "%COMSPEC% /c <payload>": 0.2,
+      "powershell -c <payload>": 0.2,
+      "<payload>": 0.2
+    },
+    "<payload>": {
+      "<sigma_payload>": 0.6,
+      "<mitre_payload>": 0.4
+    },
+```
+Tiếp tục với:
+    "<obf__csi_exe>": { ... },
+    "<obf__powershell_exe>": { ... },
+    "<obf__pwsh_exe>": { ... },
+    "<obf__powershell_ise_exe>": { ... },
+    "<obf_csi_exe>": { ... },
+    "<mitre_choice>": {
+      "alternative_technique_1": 0.3,
+      "alternative_technique_2": 0.3,
+      "alternative_technique_3": 0.2,
+      "alternative_technique_4": 0.2
+    }
+  }
+}
+```
+
+=== QUY TẮC BẮT BUỘC ===
+1. **KHÔNG tạo node trùng tên** giữa "rules" và "weights"
+2. **Tổng weights trong mỗi node = 1.0**
+3. **Sigma payload**: Obfuscate các keywords từ Sigma detection
+4. **MITRE payload**: Alternative techniques từ MITRE ATT&CK (4-5 techniques)
+5. **Wrapper**: Các cách execute command (cmd, powershell, echo, %COMSPEC%)
+6. **Không dùng node <noise>** - đơn giản hóa
+
+=== VÍ DỤ OBFUSCATION CHO KEYWORD "\csi.exe" ===
+
+{'\\csi.exe': 0.3, '\\CSI.EXE': 0.2, '\\Csi.Exe': 0.15, '\\csi^.exe': 0.15, "('\\csi'+'.exe')": 0.1, '"\\csi.exe"': 0.1}
+
+=== OUTPUT ===
+Trả về JSON HOÀN CHỈNH, không markdown, không giải thích.

@@ -1,0 +1,81 @@
+
+Bạn là chuyên gia tạo grammar JSON cho fuzzer. Hãy tạo file grammar ĐÚNG CẤU TRÚC sau:
+
+=== RULE NAME ===
+win_net_start_service
+
+=== SIGMA DETECTION ===
+
+detection:
+    selection_img:
+        - Image|endswith:
+              - '\net.exe'
+              - '\net1.exe'
+        - OriginalFileName:
+              - 'net.exe'
+              - 'net1.exe'
+    selection_cli:
+        CommandLine|contains: ' start '     # space character after the 'start' keyword indicates that a service name follows, in contrast to `net start` discovery expression
+    condition: all of selection_*
+
+
+=== EXTRACTED KEYWORDS ===
+\net.exe, \net1.exe, net.exe, net1.exe, start, start
+
+=== MITRE ATT&CK TECHNIQUES ===
+...
+
+=== CẤU TRÚC GRAMMAR YÊU CẦU ===
+
+**QUAN TRỌNG:** Tránh vòng lặp vô hạn!
+
+```json
+{
+  "rules": {
+    "<start>": "<wrapper>",
+    "<sigma_payload>": "<obf__net_exe> <obf__net1_exe> <obf_net_exe> <obf_net1_exe> <obf_start>",
+    "<mitre_payload>": "<mitre_choice>"
+  },
+  "weights": {
+    "<wrapper>": {
+      "cmd.exe /c <payload>": 0.2,
+      "echo <payload> | cmd": 0.2,
+      "%COMSPEC% /c <payload>": 0.2,
+      "powershell -c <payload>": 0.2,
+      "<payload>": 0.2
+    },
+    "<payload>": {
+      "<sigma_payload>": 0.6,
+      "<mitre_payload>": 0.4
+    },
+```
+Tiếp tục với:
+    "<obf__net_exe>": { ... },
+    "<obf__net1_exe>": { ... },
+    "<obf_net_exe>": { ... },
+    "<obf_net1_exe>": { ... },
+    "<obf_start>": { ... },
+    "<mitre_choice>": {
+      "alternative_technique_1": 0.3,
+      "alternative_technique_2": 0.3,
+      "alternative_technique_3": 0.2,
+      "alternative_technique_4": 0.2
+    }
+  }
+}
+```
+
+=== QUY TẮC BẮT BUỘC ===
+1. **KHÔNG tạo node trùng tên** giữa "rules" và "weights"
+2. **Tổng weights trong mỗi node = 1.0**
+3. **Sigma payload**: Obfuscate các keywords từ Sigma detection
+4. **MITRE payload**: Alternative techniques từ MITRE ATT&CK (4-5 techniques)
+5. **Wrapper**: Các cách execute command (cmd, powershell, echo, %COMSPEC%)
+6. **Không dùng node <noise>** - đơn giản hóa
+
+=== VÍ DỤ OBFUSCATION CHO KEYWORD "\net.exe" ===
+
+{'\\net.exe': 0.3, '\\NET.EXE': 0.2, '\\Net.Exe': 0.15, '\\net^.exe': 0.15, "('\\net'+'.exe')": 0.1, '"\\net.exe"': 0.1}
+
+=== OUTPUT ===
+Trả về JSON HOÀN CHỈNH, không markdown, không giải thích.

@@ -11,8 +11,8 @@ detection:
     condition: all of selection_*
 """
 
-# Thông tin từ file T1560.001.md (từ tag)
-mitre_techniques = """
-- makecab.exe #{input_file} #{output_file}
-- [System.IO.Compression.ZipFile]::CreateFromDirectory(...)
+tags="""
+tags:
+    - attack.t1036
+    - attack.defense-evasion
 """

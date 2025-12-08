@@ -1,0 +1,100 @@
+
+Bạn là chuyên gia tạo grammar JSON cho fuzzer. Hãy tạo file grammar ĐÚNG CẤU TRÚC sau:
+
+=== RULE NAME ===
+win_reg_query_registry
+
+=== SIGMA DETECTION ===
+
+detection:
+    selection_img:
+        - Image|endswith: '\reg.exe'
+        - OriginalFileName: 'reg.exe'
+    selection_flag:
+        CommandLine|contains: 'query'
+    selection_key:
+        CommandLine|contains:
+            - 'currentVersion\windows'
+            - 'winlogon\'
+            - 'currentVersion\shellServiceObjectDelayLoad'
+            - 'currentVersion\run' # Also covers the strings "RunOnce", "RunOnceEx" and "runServicesOnce"
+            - 'currentVersion\policies\explorer\run'
+            - 'currentcontrolset\services'
+    condition: all of selection_*
+
+
+=== EXTRACTED KEYWORDS ===
+\reg.exe, reg.exe, query, currentVersion\windows, winlogon\, currentVersion\shellServiceObjectDelayLoad, currentVersion\run, RunOnce, RunOnceEx, runServicesOnce, currentVersion\policies\explorer\run, currentcontrolset\services
+
+=== MITRE ATT&CK TECHNIQUES ===
+# T1012 - Query Registry
+
+## Context:
+Adversaries may interact with the Windows Registry to gather information about the system, configuration, and installed software.The Registry contains a significant amount of information about the operating system, configuration, software, and security.[1] Information can easily be queried using the Reg utility, though other means to access the Registry exist. Some of the information may help adversaries to further their operation within a network. Adversaries may use the information from Query ...
+
+## Alternative Methods:
+
+### From Atomic Red Team:
+
+#### 1. Query Registry
+Query Windows Registry.
+Upon successful execution, cmd.exe will perform multiple reg queries. Some will succeed and others will fail (dependent upon OS).
+References:
+https://blog.cylance.com/windows-registry-persistence-part-2-the-run-keys-and-search-order
+https://blog.cylance.com/windows-registry-persistence-part-1-introduction-attack-phases-and-windows-services
+http://www.handg...
+
+=== CẤU TRÚC GRAMMAR YÊU CẦU ===
+
+**QUAN TRỌNG:** Tránh vòng lặp vô hạn!
+
+```json
+{
+  "rules": {
+    "<start>": "<wrapper>",
+    "<sigma_payload>": "<obf__reg_exe> <obf_reg_exe> <obf_query> <obf_currentversion_windows> <obf_winlogon_>",
+    "<mitre_payload>": "<mitre_choice>"
+  },
+  "weights": {
+    "<wrapper>": {
+      "cmd.exe /c <payload>": 0.2,
+      "echo <payload> | cmd": 0.2,
+      "%COMSPEC% /c <payload>": 0.2,
+      "powershell -c <payload>": 0.2,
+      "<payload>": 0.2
+    },
+    "<payload>": {
+      "<sigma_payload>": 0.6,
+      "<mitre_payload>": 0.4
+    },
+```
+Tiếp tục với:
+    "<obf__reg_exe>": { ... },
+    "<obf_reg_exe>": { ... },
+    "<obf_query>": { ... },
+    "<obf_currentversion_windows>": { ... },
+    "<obf_winlogon_>": { ... },
+    "<mitre_choice>": {
+      "alternative_technique_1": 0.3,
+      "alternative_technique_2": 0.3,
+      "alternative_technique_3": 0.2,
+      "alternative_technique_4": 0.2
+    }
+  }
+}
+```
+
+=== QUY TẮC BẮT BUỘC ===
+1. **KHÔNG tạo node trùng tên** giữa "rules" và "weights"
+2. **Tổng weights trong mỗi node = 1.0**
+3. **Sigma payload**: Obfuscate các keywords từ Sigma detection
+4. **MITRE payload**: Alternative techniques từ MITRE ATT&CK (4-5 techniques)
+5. **Wrapper**: Các cách execute command (cmd, powershell, echo, %COMSPEC%)
+6. **Không dùng node <noise>** - đơn giản hóa
+
+=== VÍ DỤ OBFUSCATION CHO KEYWORD "\reg.exe" ===
+
+{'\\reg.exe': 0.3, '\\REG.EXE': 0.2, '\\Reg.Exe': 0.15, '\\reg^.exe': 0.15, "('\\reg'+'.exe')": 0.1, '"\\reg.exe"': 0.1}
+
+=== OUTPUT ===
+Trả về JSON HOÀN CHỈNH, không markdown, không giải thích.

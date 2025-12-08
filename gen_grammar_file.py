@@ -4,156 +4,225 @@
 
 import json
 import os
+import sys
 import argparse
 import importlib.util
-from obfuscation_lib import get_string_obfuscations, get_wrappers, get_noise
+import re
+from pathlib import Path
 
 def load_rule_config(config_file_path):
     """Tải động file cấu hình rule"""
     try:
-        spec = importlib.util.spec_from_file_location("rule_config", config_file_path)
-        if spec is None:
-            raise FileNotFoundError(f"Không thể tìm thấy file cấu hình: {config_file_path}")
-            
-        rule_config = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(rule_config)
-        
-        if not hasattr(rule_config, 'rule_name') or \
-           not hasattr(rule_config, 'sigma_detection') or \
-           not hasattr(rule_config, 'mitre_techniques'):
-            print(f"[LỖI] File cấu hình {config_file_path} thiếu các biến cần thiết.")
-            return None
-            
-        return rule_config
-        
+        spec = importlib.util.spec_from_file_location("config", config_file_path)
+        config = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(config)
+        return config
+    except SyntaxError as e:
+        print(f"[LỖI] Syntax error trong file config: {e}")
+        print(f"[HINT] Hãy thêm 'r' trước triple-quoted strings:")
+        print(f"       sigma_detection = r\"\"\"...\"\"\"")
+        sys.exit(1)
     except Exception as e:
-        print(f"[LỖI] Không thể tải file cấu hình {config_file_path}: {e}")
-        return None
+        print(f"[LỖI] Không thể tải file cấu hình: {e}")
+        sys.exit(1)
 
-def generate_prompt(config):
+def extract_keywords_from_sigma(sigma_detection: str) -> dict:
+    """
+    Trích xuất keywords từ Sigma detection logic
+    
+    Returns:
+        dict: {
+            'exact_keywords': ['keyword1', 'keyword2'],
+            'regex_patterns': [r'\d+', r'[a-z]+'],
+            'logic': 'contains|all' | 'contains' | 'endswith'
+        }
+    """
+    keywords = {
+        'exact_keywords': [],
+        'regex_patterns': [],
+        'logic': 'contains'
+    }
+    
+    # Extract logic type
+    if 'contains|all' in sigma_detection:
+        keywords['logic'] = 'contains|all'
+    elif 'endswith' in sigma_detection:
+        keywords['logic'] = 'endswith'
+    
+    # Extract exact keywords (strings in quotes)
+    exact_matches = re.findall(r"['\"]([^'\"]+)['\"]", sigma_detection)
+    keywords['exact_keywords'] = [k.strip() for k in exact_matches if k.strip() and not k.startswith('#')]
+    
+    return keywords
+
+def generate_obfuscation_rules(keyword: str) -> dict:
+    """
+    Tạo các rule obfuscation cho 1 keyword
+    
+    Returns:
+        dict: {
+            'node_name': '<obf_keyword>',
+            'weights': {
+                'original': 0.3,
+                'uppercase': 0.2,
+                ...
+            }
+        }
+    """
+    # Sanitize keyword cho node name
+    safe_name = re.sub(r'[^a-zA-Z0-9]', '_', keyword.lower())
+    node_name = f"<obf_{safe_name}>"
+    
+    weights = {
+        keyword: 0.3,                           # Original
+        keyword.upper(): 0.2,                   # UPPERCASE
+        keyword.title(): 0.15,                  # Title Case
+    }
+    
+    # CMD caret obfuscation
+    if len(keyword) > 2:
+        mid = len(keyword) // 2
+        weights[f"{keyword[:mid]}^{keyword[mid:]}"] = 0.15
+    
+    # PowerShell string concat
+    if len(keyword) > 3:
+        mid = len(keyword) // 2
+        weights[f"('{keyword[:mid]}'+'{keyword[mid:]}')"] = 0.1
+    
+    # Quoted
+    weights[f'"{keyword}"'] = 0.1
+    
+    return {
+        'node_name': node_name,
+        'weights': weights
+    }
+
+def generate_prompt(config, auto_fetch=False):
     """Tạo prompt cho Gemini dựa trên cấu hình rule"""
     rule_name = config.rule_name
     sigma_detection = config.sigma_detection
-    mitre_techniques = config.mitre_techniques
+    mitre_techniques = getattr(config, 'mitre_techniques', '')
     
-    wrappers = get_wrappers()
-    noise = get_noise()
+    # Extract keywords from Sigma
+    sigma_info = extract_keywords_from_sigma(sigma_detection)
+    keywords = sigma_info['exact_keywords']
     
-    # Tạo ví dụ obfuscation
-    obfuscation_examples = get_string_obfuscations("7z.exe")
+    print(f"\n[i] Extracted keywords: {keywords}")
+    
+    # Generate obfuscation rules for each keyword
+    obf_rules = []
+    for keyword in keywords[:5]:  # Limit to 5 keywords
+        obf_rule = generate_obfuscation_rules(keyword)
+        obf_rules.append(obf_rule)
+    
+    # Build sigma_payload structure
+    sigma_payload_parts = []
+    for obf_rule in obf_rules:
+        sigma_payload_parts.append(obf_rule['node_name'])
+    
+    sigma_payload_template = " ".join(sigma_payload_parts)
     
     prompt = f"""
-Bạn là một chuyên gia về an ninh mạng (offensive security) và là một kỹ sư fuzzing.
-Nhiệm vụ của bạn là tạo ra một file văn phạm (grammar) JSON tập trung cao độ (highly-focused) để bypass một rule SIEM cụ thể.
+Bạn là chuyên gia tạo grammar JSON cho fuzzer. Hãy tạo file grammar ĐÚNG CẤU TRÚC sau:
 
-Đây là toàn bộ thông tin đầu vào của bạn:
----
-
-### 1. Rule Name:
+=== RULE NAME ===
 {rule_name}
 
-### 2. Rule Sigma (Detection Logic):
+=== SIGMA DETECTION ===
 {sigma_detection}
 
-### 3. Kỹ thuật thay thế (MITRE Techniques):
-{mitre_techniques}
-### 4. Thư viện Kỹ thuật (Primitives):
+=== EXTRACTED KEYWORDS ===
+{', '.join(keywords)}
 
-#### Wrappers (Vỏ bọc)
-{json.dumps(wrappers, indent=2, ensure_ascii=False)}
+=== MITRE ATT&CK TECHNIQUES ===
+{mitre_techniques[:1000]}...
 
-#### Obfuscation (Ví dụ làm rối cho 'some_keyword'):
-{json.dumps(obfuscation_examples, indent=2, ensure_ascii=False)}
+=== CẤU TRÚC GRAMMAR YÊU CẦU ===
 
-#### Noise (Gây nhiễu):
-{json.dumps(noise, indent=2, ensure_ascii=False)}
-
----
-
-### YÊU CẦU:
-
-Dựa trên các thông tin trên, hãy **TỰ ĐỘNG PHÂN TÍCH** các từ khóa (keywords) và logic, sau đó **TẠO RA** một file văn phạm JSON hoàn chỉnh.
-
-File văn phạm PHẢI tuân thủ các logic sau:
-
-1.  **Cấu trúc file:** JSON phải có 2 key chính: "rules" và "weights".
-2.  **Quy tắc Gốc (<start>):** Phải là một lựa chọn (trong 'weights') tên là "<wrapper_choice>", bao gồm TẤT CẢ các wrapper trong thư viện. Quy tắc "rules" `<start>` sẽ trỏ đến "<wrapper_choice>".
-3.  **Quy tắc Logic (<payload>):** Phải có một lựa chọn tên là "<payload_choice>" (trong 'weights') cho phép fuzzer chọn giữa:
-    * "<sigma_payload>" (để tấn công các từ khóa của Rule Sigma)
-    * "<mitre_payload>" (để tấn công logic bằng các kỹ thuật thay thế)
-4.  **Quy tắc Sigma (<sigma_payload>):**
-    * **Phân tích** 'Rule Sigma (Detection)' để tìm các TỪ KHÓA (ví dụ: '7z.exe', '.dmp') và LOGIC (ví dụ: 'all of', 'contains', 'endswith').
-    * **Tạo** các quy tắc lựa chọn (ví dụ: "<obf_7z_exe>", "<obf_dmp>") cho TỪNG TỪ KHÓA bạn tìm thấy, sử dụng logic từ 'Thư viện Obfuscation'.
-    * **Tạo** quy tắc sequence "<sigma_payload>" để kết hợp các quy tắc obfuscation này và 'Thư viện Noise' theo đúng 'LOGIC' (ví dụ: "all of" nghĩa là phải có cả hai).
-5.  **Quy tắc MITRE (<mitre_payload>):**
-    * **Phân tích** 'MITRE Techniques' để tìm các LỆNH thay thế (ví dụ: 'makecab.exe ...', 'powershell.exe...Compression.ZipFile').
-    * **Tạo** một lựa chọn (trong 'weights') tên là "<mitre_choice>" để fuzzer chọn một trong các lệnh này. Quy tắc "rules" `<mitre_payload>` sẽ trỏ đến "<mitre_choice>".
-6.  **Trọng số (Weights):** Tất cả các lựa chọn ban đầu phải có trọng số là `1.0`.
-7.  **Tính Sáng tạo (Quan trọng):** Dựa trên logic của 'Thư viện Obfuscation', hãy **tự mình đề xuất thêm 1-2 biến thể obfuscation mới** (ví dụ: dùng biến môi trường như `%COMSPEC%`) và thêm chúng vào các quy tắc lựa chọn (choice) có liên quan.
-
----
-### OUTPUT (CHỈ JSON):
-
-Chỉ trả về nội dung file JSON. Không giải thích. Không viết gì khác..
-### ĐẦU RA JSON MẪU (ONE-SHOT EXAMPLE)
-
-Đây là file JSON đầu ra "chuẩn" cho ví dụ trên:
+**QUAN TRỌNG:** Tránh vòng lặp vô hạn!
 
 ```json
 {{
   "rules": {{
-    "<start>": "<wrapper_choice>",
-    "<payload>": "<sigma_payload>",
-    "<sigma_payload>": "<obf_whoami>"
+    "<start>": "<wrapper>",
+    "<sigma_payload>": "{sigma_payload_template}",
+    "<mitre_payload>": "<mitre_choice>"
   }},
   "weights": {{
-    "<wrapper_choice>": {{
-      "cmd.exe /c <payload>": 1.0,
-      "echo <payload> | cmd": 1.0
+    "<wrapper>": {{
+      "cmd.exe /c <payload>": 0.2,
+      "echo <payload> | cmd": 0.2,
+      "%COMSPEC% /c <payload>": 0.2,
+      "powershell -c <payload>": 0.2,
+      "<payload>": 0.2
     }},
-    "<obf_whoami>": {{
-      "\\"whoami.exe\\"": 1.0,
-      "\\"WHOAMI.EXE\\"": 1.0,
-      "\\"who^ami.exe\\"": 1.0,
-      "\\"who\\"\\"ami.exe\\"": 1.0
+    "<payload>": {{
+      "<sigma_payload>": 0.6,
+      "<mitre_payload>": 0.4
+    }},
+```
+Tiếp tục với:
+{chr(10).join([f'    "{obf_rule["node_name"]}": {{ ... }},' for obf_rule in obf_rules])}
+    "<mitre_choice>": {{
+      "alternative_technique_1": 0.3,
+      "alternative_technique_2": 0.3,
+      "alternative_technique_3": 0.2,
+      "alternative_technique_4": 0.2
     }}
   }}
 }}
 ```
+
+=== QUY TẮC BẮT BUỘC ===
+1. **KHÔNG tạo node trùng tên** giữa "rules" và "weights"
+2. **Tổng weights trong mỗi node = 1.0**
+3. **Sigma payload**: Obfuscate các keywords từ Sigma detection
+4. **MITRE payload**: Alternative techniques từ MITRE ATT&CK (4-5 techniques)
+5. **Wrapper**: Các cách execute command (cmd, powershell, echo, %COMSPEC%)
+6. **Không dùng node <noise>** - đơn giản hóa
+
+=== VÍ DỤ OBFUSCATION CHO KEYWORD "{keywords[0] if keywords else 'example'}" ===
+
+{obf_rules[0]['weights'] if obf_rules else {}}
+
+=== OUTPUT ===
+Trả về JSON HOÀN CHỈNH, không markdown, không giải thích.
 """
-    return prompt.strip()
+    
+    return prompt
 
-def main(config_path):
-    print(f"Đang tải cấu hình rule từ: {config_path}")
+def main(config_path, auto_fetch=False):
+    """Main function"""
+    # Load config
     config = load_rule_config(config_path)
-    if config is None:
-        return
-
-    # Tạo prompt
-    prompt = generate_prompt(config)
     
-    # Tạo thư mục output
-    output_dir = f"{config.rule_name}_fuzz_data"
-    os.makedirs(output_dir, exist_ok=True)
+    # Create output directory
+    output_dir = Path(f"{config.rule_name}_fuzz_data")
+    output_dir.mkdir(exist_ok=True)
     
-    # Lưu prompt vào file
-    prompt_filepath = os.path.join(output_dir, "prompt.txt")
-    with open(prompt_filepath, 'w', encoding='utf-8') as f:
+    # Generate prompt
+    prompt = generate_prompt(config, auto_fetch=auto_fetch)
+    
+    # Save prompt
+    prompt_file = output_dir / "prompt.txt"
+    with open(prompt_file, 'w', encoding='utf-8') as f:
         f.write(prompt)
     
-    print(f"✓ Đã tạo prompt tại: {prompt_filepath}")
-    print(f"\n--- PROMPT CONTENT ---\n{prompt}\n--- END PROMPT ---")
-    print(f"\nHãy copy prompt trên lên Gemini Web GUI để tạo grammar.json")
-    print(f"Sau đó lưu kết quả vào: {os.path.join(output_dir, 'grammar.json')}")
+    print(f"\n[✓] Đã tạo prompt tại: {prompt_file}")
+    print(f"\n[i] Copy prompt vào Gemini để tạo grammar.json")
+    print(f"[i] Lưu kết quả vào: {output_dir / 'grammar.json'}")
+    print(f"\n=== CHECKLIST ===")
+    print(f"  [ ] Copy prompt từ {prompt_file}")
+    print(f"  [ ] Paste vào Gemini Web")
+    print(f"  [ ] Lưu JSON output vào {output_dir / 'grammar.json'}")
+    print(f"  [ ] Validate JSON: python -m json.tool {output_dir / 'grammar.json'}")
+    print(f"  [ ] Chạy fuzzer: python grammar_fuzzer.py -g {output_dir / 'grammar.json'}")
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Tạo Prompt cho Gemini từ file cấu hình Rule")
-    parser.add_argument(
-        "-c", "--config",
-        type=str,
-        required=True,
-        help="Đường dẫn đến file cấu hình rule (ví dụ: data/rule_config_7zip.py)"
-    )
+    parser = argparse.ArgumentParser(description="Generate grammar prompt from Sigma rule config")
+    parser.add_argument('-c', '--config', required=True, help='Path to rule config file')
+    parser.add_argument('--auto-fetch', action='store_true', help='Auto-fetch mitre_techniques')
+    
     args = parser.parse_args()
     
-    main(args.config)
+    main(args.config, auto_fetch=args.auto_fetch)

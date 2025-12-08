@@ -1,0 +1,45 @@
+{
+  "rules": {
+    "<start>": "<wrapper>",
+    "<sigma_payload>": "<obf_net_executable> <obf_start_verb> <target_service>",
+    "<mitre_payload>": "<mitre_choice>"
+  },
+  "weights": {
+    "<wrapper>": {
+      "cmd.exe /c <payload>": 0.2,
+      "cmd.exe /r <payload>": 0.2,
+      "echo <payload> | cmd": 0.2,
+      "%COMSPEC% /c <payload>": 0.2,
+      "<payload>": 0.2
+    },
+    "<payload>": {
+      "<sigma_payload>": 0.6,
+      "<mitre_payload>": 0.4
+    },
+    "<obf_net_executable>": {
+      "net": 0.2,
+      "net1": 0.2,
+      "net.exe": 0.2,
+      "\"net.exe\"": 0.1,
+      "n^et.exe": 0.1,
+      "%SystemRoot%\\System32\\net.exe": 0.1,
+      "%SystemRoot%\\System32\\net1.exe": 0.1
+    },
+    "<obf_start_verb>": {
+      " start ": 0.4,
+      " \"start\" ": 0.2,
+      " s^tart ": 0.2,
+      " st\"\"art ": 0.2
+    },
+    "<target_service>": {
+      "wuauserv": 0.5,
+      "LanmanWorkstation": 0.5
+    },
+    "<mitre_choice>": {
+      "sc start wuauserv": 0.25,
+      "powershell -Command \"Start-Service wuauserv\"": 0.25,
+      "wmic service where name=\"wuauserv\" call startservice": 0.25,
+      "Get-Service wuauserv | Start-Service": 0.25
+    }
+  }
+}
